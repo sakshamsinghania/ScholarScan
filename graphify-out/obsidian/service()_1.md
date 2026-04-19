@@ -1,0 +1,17 @@
+---
+source_file: "backend/tests/test_progress_service.py"
+type: "code"
+community: "Progress Service Tests"
+location: "L15"
+tags:
+  - graphify/code
+  - graphify/EXTRACTED
+  - community/Progress_Service_Tests
+---
+
+# service()
+
+## Connections
+- [[test_progress_service.py]] - `contains` [EXTRACTED]
+
+#graphify/code #graphify/EXTRACTED #community/Progress_Service_Tests

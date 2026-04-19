@@ -1,0 +1,15 @@
+# Environments
+venv/
+.env
+.env.local
+
+# Credentials — never commit service account keys
+credentials/
+
+# User uploads — generated at runtime
+uploads/
+
+# Python caches
+__pycache__/
+*.pyc
+.pytest_cache/

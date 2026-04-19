@@ -1,0 +1,1116 @@
+{
+	"info": {
+		"_postman_id": "scholarscan-backend-api-collection",
+		"name": "ScholarScan Backend API",
+		"description": "Production-ready Postman collection for the ScholarScan assessment system backend API.\n\n## Overview\nScholarScan is an automated answer-sheet assessment system that uses OCR, NLP, and a Groq-backed LLM service to evaluate student answers against model answers.\n\n## Supported Modes\n- **Manual single-question assessment**: Upload an image of a student answer along with a model answer for immediate synchronous grading.\n- **Async multi-question assessment**: Upload an image or PDF answer file (and optionally a question paper) for background processing of multiple questions.\n\n## Async Assessment Flow\n1. Submit an assessment via `POST /api/assess` (returns `task_id` with HTTP 202).\n2. Stream real-time progress via `GET /api/progress/stream/{task_id}` (SSE endpoint).\n3. Poll or fetch the final result via `GET /api/task/{task_id}/result`.\n4. Browse assessment history via `GET /api/results`.\n\n## Configuration\nSet the collection variables before running requests. At minimum, update `manualImagePath`, `answerFilePath`, and `questionFilePath` to point to real files on your machine.\n\nFor auto-reference generation, start the backend with `GROQ_API_KEY`, optionally override `GROQ_BASE_URL`, and confirm `GET /api/health` reports `llm_configured: true`.\n\nDefault Groq settings reflected here:\n- `groqBaseUrl`: `https://api.groq.com/openai/v1`\n- `llmModel`: `llama-3.3-70b-versatile`\n\n## Upload Limits\n- Maximum file size: 16 MB\n- Allowed extensions: jpg, jpeg, png, pdf",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5050",
+			"type": "string"
+		},
+		{
+			"key": "studentId",
+			"value": "alice",
+			"type": "string"
+		},
+		{
+			"key": "questionId",
+			"value": "Q1",
+			"type": "string"
+		},
+		{
+			"key": "maxMarks",
+			"value": "10",
+			"type": "string"
+		},
+		{
+			"key": "taskId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "manualImagePath",
+			"value": "/absolute/path/to/sample-answer.jpg",
+			"type": "string"
+		},
+		{
+			"key": "answerFilePath",
+			"value": "/absolute/path/to/sample-answer.pdf",
+			"type": "string"
+		},
+		{
+			"key": "questionFilePath",
+			"value": "/absolute/path/to/sample-question-paper.pdf",
+			"type": "string"
+		},
+		{
+			"key": "modelAnswer",
+			"value": "Photosynthesis is the process by which green plants convert light energy into chemical energy.",
+			"type": "string"
+		},
+		{
+			"key": "groqBaseUrl",
+			"value": "https://api.groq.com/openai/v1",
+			"type": "string"
+		},
+		{
+			"key": "llmModel",
+			"value": "llama-3.3-70b-versatile",
+			"type": "string"
+		},
+		{
+			"key": "originHeader",
+			"value": "http://localhost:5173",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Health",
+			"description": "Health check endpoints to verify system status, component availability, and capability flags.",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "health"]
+						},
+						"description": "Returns the current health status of all system components including OCR, NLP models, Groq-backed LLM configuration, and PDF support. Use this to verify the backend is running and which capabilities are available before submitting assessments. For auto-reference generation, confirm `llm_configured` is `true`."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is JSON', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('Required health fields exist', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('status');",
+									"    pm.expect(json).to.have.property('ocr_available');",
+									"    pm.expect(json).to.have.property('tesseract_available');",
+									"    pm.expect(json).to.have.property('vision_credentials_configured');",
+									"    pm.expect(json).to.have.property('sbert_loaded');",
+									"    pm.expect(json).to.have.property('spacy_model_loaded');",
+									"    pm.expect(json).to.have.property('llm_configured');",
+									"    pm.expect(json).to.have.property('pdf_support');",
+									"    pm.expect(json).to.have.property('capabilities');",
+									"    pm.expect(json).to.have.property('supported_modes');",
+									"    pm.expect(json).to.have.property('timestamp');",
+									"});",
+									"",
+									"pm.test('Status is healthy or degraded', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.status).to.be.oneOf(['healthy', 'degraded']);",
+									"});",
+									"",
+									"pm.test('Capabilities object has expected keys', function () {",
+									"    var caps = pm.response.json().capabilities;",
+									"    pm.expect(caps).to.have.property('ocr');",
+									"    pm.expect(caps).to.have.property('semantic_similarity');",
+									"    pm.expect(caps).to.have.property('llm');",
+									"    pm.expect(caps).to.have.property('pdf');",
+									"});",
+									"",
+									"pm.test('Supported modes object has expected keys', function () {",
+									"    var modes = pm.response.json().supported_modes;",
+									"    pm.expect(modes).to.have.property('manual_assessment');",
+									"    pm.expect(modes).to.have.property('auto_reference_generation');",
+									"    pm.expect(modes).to.have.property('multi_question_assessment');",
+									"});"
+								]
+							}
+						}
+					],
+					"response": []
+				},
+				{
+					"name": "Health Check With Origin Header",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Origin",
+								"value": "{{originHeader}}",
+								"description": "Simulates a cross-origin request from the frontend dev server"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "health"]
+						},
+						"description": "Health check with an Origin header to verify CORS configuration. Simulates a request from the frontend application at the configured origin. Useful for debugging CORS issues during local development."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is JSON', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('Required fields exist', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('status');",
+									"    pm.expect(json.status).to.be.oneOf(['healthy', 'degraded']);",
+									"});"
+								]
+							}
+						}
+					],
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Assessment",
+			"description": "Assessment submission endpoints. Supports two modes:\n\n**Manual (synchronous):** Upload an image with a model answer for immediate single-question grading (HTTP 200).\n\n**Async (background):** Upload an image or PDF answer file (optionally with a question paper) for multi-question processing (HTTP 202). Groq is used for automatic reference-answer generation when manual model answers are not supplied. The response includes a `task_id` to track progress and retrieve results.\n\n### Async Assessment Flow\n1. Submit via `POST /api/assess` \u2192 receive `task_id`\n2. Stream progress via `GET /api/progress/stream/{task_id}`\n3. Fetch result via `GET /api/task/{task_id}/result`",
+			"item": [
+				{
+					"name": "Manual Assessment - Image + Model Answer",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": "{{manualImagePath}}",
+									"description": "Image of the student's handwritten or printed answer (jpg, jpeg, png)"
+								},
+								{
+									"key": "model_answer",
+									"value": "{{modelAnswer}}",
+									"type": "text",
+									"description": "The reference/model answer to compare against"
+								},
+								{
+									"key": "question_id",
+									"value": "{{questionId}}",
+									"type": "text",
+									"description": "Identifier for the question being assessed"
+								},
+								{
+									"key": "student_id",
+									"value": "{{studentId}}",
+									"type": "text",
+									"description": "Identifier for the student"
+								},
+								{
+									"key": "max_marks",
+									"value": "{{maxMarks}}",
+									"type": "text",
+									"description": "Maximum marks for this question (integer, 1\u2013100)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/assess",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "assess"]
+						},
+						"description": "Synchronous single-question assessment. Uploads an image of a student answer along with a model answer. The server performs OCR, text cleaning, similarity scoring, and grading, then returns the complete result immediately.\n\nRequires: `image` (file) and `model_answer` (text).\nOptional: `question_id`, `student_id`, `max_marks`.\n\nNote: When `model_answer` is provided, only image uploads are supported (not PDFs). Do not include `question_file` in manual mode."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is JSON', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('Required assessment result fields exist', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('extracted_text');",
+									"    pm.expect(json).to.have.property('cleaned_text');",
+									"    pm.expect(json).to.have.property('tfidf_score');",
+									"    pm.expect(json).to.have.property('sbert_score');",
+									"    pm.expect(json).to.have.property('similarity_score');",
+									"    pm.expect(json).to.have.property('keyword_overlap');",
+									"    pm.expect(json).to.have.property('missing_keywords');",
+									"    pm.expect(json).to.have.property('marks');",
+									"    pm.expect(json).to.have.property('max_marks');",
+									"    pm.expect(json).to.have.property('grade');",
+									"    pm.expect(json).to.have.property('feedback');",
+									"    pm.expect(json).to.have.property('assessed_at');",
+									"});",
+									"",
+									"pm.test('Score fields are numbers', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.tfidf_score).to.be.a('number');",
+									"    pm.expect(json.sbert_score).to.be.a('number');",
+									"    pm.expect(json.similarity_score).to.be.a('number');",
+									"    pm.expect(json.marks).to.be.a('number');",
+									"    pm.expect(json.max_marks).to.be.a('number');",
+									"});"
+								]
+							}
+						}
+					],
+					"response": []
+				},
+				{
+					"name": "Async Assessment - Image Without Model Answer",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": "{{manualImagePath}}",
+									"description": "Image of the student's answer"
+								},
+								{
+									"key": "student_id",
+									"value": "{{studentId}}",
+									"type": "text",
+									"description": "Identifier for the student"
+								},
+								{
+									"key": "max_marks",
+									"value": "{{maxMarks}}",
+									"type": "text",
+									"description": "Maximum marks (integer, 1\u2013100)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/assess",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "assess"]
+						},
+						"description": "Async assessment triggered by submitting an image without a model answer. The server queues the assessment for background processing and returns a `task_id` (HTTP 202). Use this task_id to stream progress or fetch the final result.\n\nThe backend will attempt Groq-powered auto-reference generation, so `GET /api/health` should report `llm_configured: true` before using this mode."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 202', function () {",
+									"    pm.response.to.have.status(202);",
+									"});",
+									"",
+									"pm.test('Response is JSON', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('Task ID exists and status is processing', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('task_id');",
+									"    pm.expect(json.task_id).to.be.a('string').and.not.empty;",
+									"    pm.expect(json.status).to.eql('processing');",
+									"});",
+									"",
+									"pm.test('Save task_id to collection variable', function () {",
+									"    var json = pm.response.json();",
+									"    if (json.task_id) {",
+									"        pm.collectionVariables.set('taskId', json.task_id);",
+									"    }",
+									"});"
+								]
+							}
+						}
+					],
+					"response": []
+				},
+				{
+					"name": "Async Assessment - PDF Answer File",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "answer_file",
+									"type": "file",
+									"src": "{{answerFilePath}}",
+									"description": "PDF file containing the student's answers"
+								},
+								{
+									"key": "student_id",
+									"value": "{{studentId}}",
+									"type": "text",
+									"description": "Identifier for the student"
+								},
+								{
+									"key": "max_marks",
+									"value": "{{maxMarks}}",
+									"type": "text",
+									"description": "Maximum marks per question (integer, 1\u2013100)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/assess",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "assess"]
+						},
+						"description": "Async multi-question assessment using a PDF answer file. The server extracts text from the PDF, splits it into individual answers, and processes each question in the background.\n\nIf authoritative question text can be resolved, the backend uses Groq to generate reference answers before scoring. Returns HTTP 202 with a `task_id`. Use the Progress and Results endpoints to monitor and retrieve the outcome."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 202', function () {",
+									"    pm.response.to.have.status(202);",
+									"});",
+									"",
+									"pm.test('Response is JSON', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('Task ID exists and status is processing', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('task_id');",
+									"    pm.expect(json.task_id).to.be.a('string').and.not.empty;",
+									"    pm.expect(json.status).to.eql('processing');",
+									"});",
+									"",
+									"pm.test('Save task_id to collection variable', function () {",
+									"    var json = pm.response.json();",
+									"    if (json.task_id) {",
+									"        pm.collectionVariables.set('taskId', json.task_id);",
+									"    }",
+									"});"
+								]
+							}
+						}
+					],
+					"response": []
+				},
+				{
+					"name": "Async Assessment - PDF Answer File + Question Paper",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "answer_file",
+									"type": "file",
+									"src": "{{answerFilePath}}",
+									"description": "PDF file containing the student's answers"
+								},
+								{
+									"key": "question_file",
+									"type": "file",
+									"src": "{{questionFilePath}}",
+									"description": "PDF file containing the question paper (used to extract questions and generate model answers)"
+								},
+								{
+									"key": "student_id",
+									"value": "{{studentId}}",
+									"type": "text",
+									"description": "Identifier for the student"
+								},
+								{
+									"key": "max_marks",
+									"value": "{{maxMarks}}",
+									"type": "text",
+									"description": "Maximum marks per question (integer, 1\u2013100)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/assess",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "assess"]
+						},
+						"description": "Async assessment with both an answer file and a question paper. The server extracts questions from the question paper, generates model answers using the configured Groq/OpenAI-compatible LLM, then assesses each student answer against the generated reference.\n\nThis is the most comprehensive assessment mode. Returns HTTP 202 with a `task_id`."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 202', function () {",
+									"    pm.response.to.have.status(202);",
+									"});",
+									"",
+									"pm.test('Response is JSON', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('Task ID exists and status is processing', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('task_id');",
+									"    pm.expect(json.task_id).to.be.a('string').and.not.empty;",
+									"    pm.expect(json.status).to.eql('processing');",
+									"});",
+									"",
+									"pm.test('Save task_id to collection variable', function () {",
+									"    var json = pm.response.json();",
+									"    if (json.task_id) {",
+									"        pm.collectionVariables.set('taskId', json.task_id);",
+									"    }",
+									"});"
+								]
+							}
+						}
+					],
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Progress",
+			"description": "Server-Sent Events (SSE) endpoints for streaming real-time progress updates during async assessment tasks.\n\n**Important:** Postman does not natively support SSE like a browser's `EventSource` API. These requests are included for debugging and inspecting the raw streamed output. For full SSE consumption, use a browser, `curl`, or a dedicated SSE client.\n\nEvent payloads may include: `stage`, `status`, `message`, `step`, `total_steps`.",
+			"item": [
+				{
+					"name": "Stream Progress By Task ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "text/event-stream",
+								"description": "Request SSE content type"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/progress/stream/{{taskId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "progress", "stream", "{{taskId}}"]
+						},
+						"description": "Streams real-time progress events for an async assessment task via Server-Sent Events (SSE).\n\n**Note:** Postman may not fully render SSE streams like a browser EventSource client. The response body will show raw SSE data lines (`data: {...}`). This request is included for debugging and inspecting the streamed output.\n\nEvent payloads may include:\n- `stage`: current processing stage\n- `status`: event status\n- `message`: human-readable progress message\n- `step` / `total_steps`: numeric progress indicators\n\nRequires a valid `taskId` from a prior async assessment submission."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Content-Type includes text/event-stream', function () {",
+									"    var contentType = pm.response.headers.get('Content-Type');",
+									"    pm.expect(contentType).to.include('text/event-stream');",
+									"});"
+								]
+							}
+						}
+					],
+					"response": []
+				},
+				{
+					"name": "Stream Progress - Unknown Task",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "text/event-stream",
+								"description": "Request SSE content type"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/progress/stream/nonexistent-task-id-12345",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "progress", "stream", "nonexistent-task-id-12345"]
+						},
+						"description": "Attempts to stream progress for a task ID that does not exist. Expected to return HTTP 404."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 404', function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								]
+							}
+						}
+					],
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Results",
+			"description": "Endpoints for retrieving assessment results. Includes both individual task results and historical result browsing with optional filtering.\n\n### Task Result States\n- **200**: Result ready, full assessment data returned\n- **202**: Task still processing\n- **404**: Task not found\n\n### Multi-Question Result Status\n- `completed`: every detected question was graded successfully\n- `partial_failure`: one or more questions could not be graded automatically; inspect per-question `status` and `failure_reason`\n\n### History Result Types\n- `single_question`: Individual question assessment with score, grade, and feedback\n- `multi_question`: Multi-question assessment with aggregate scores and per-question breakdown",
+			"item": [
+				{
+					"name": "Get Task Result",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/task/{{taskId}}/result",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "task", "{{taskId}}", "result"]
+						},
+						"description": "Fetches the final result for an async assessment task. Returns HTTP 200 with the complete result when processing is finished, HTTP 202 if still processing, or HTTP 404 if the task does not exist.\n\nFor multi-question assessments, the response includes `total_score`, `max_total_score`, `total_questions`, `failed_questions`, aggregate `status`, and a `results` array with per-question details. Each per-question entry now includes `status` (`completed` or `failed`), and failed entries may include `failure_reason` instead of a real grade outcome.\n\nRequires a valid `taskId` from a prior async assessment submission."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var statusCode = pm.response.code;",
+									"",
+									"pm.test('Status code is 200, 202, or 404', function () {",
+									"    pm.expect(statusCode).to.be.oneOf([200, 202, 404]);",
+									"});",
+									"",
+									"if (statusCode === 200) {",
+									"    pm.test('Response is JSON', function () {",
+									"        pm.response.to.be.json;",
+									"    });",
+									"",
+									"    pm.test('Result contains expected aggregate fields', function () {",
+									"        var json = pm.response.json();",
+									"        pm.expect(json).to.have.property('total_score');",
+									"        pm.expect(json).to.have.property('max_total_score');",
+									"        pm.expect(json).to.have.property('total_questions');",
+									"        pm.expect(json).to.have.property('failed_questions');",
+									"        pm.expect(json).to.have.property('status');",
+									"        pm.expect(json.status).to.be.oneOf(['completed', 'partial_failure']);",
+									"        pm.expect(json).to.have.property('results');",
+									"        pm.expect(json.results).to.be.an('array');",
+									"    });",
+									"",
+									"    pm.test('Result array items have expected structure', function () {",
+									"        var results = pm.response.json().results;",
+									"        if (results.length > 0) {",
+									"            var first = results[0];",
+									"            pm.expect(first).to.have.property('question_id');",
+									"            pm.expect(first).to.have.property('question');",
+									"            pm.expect(first).to.have.property('student_answer');",
+									"            pm.expect(first).to.have.property('model_answer');",
+									"            pm.expect(first).to.have.property('similarity_score');",
+									"            pm.expect(first).to.have.property('marks');",
+									"            pm.expect(first).to.have.property('grade');",
+									"            pm.expect(first).to.have.property('feedback');",
+									"            pm.expect(first).to.have.property('status');",
+									"            pm.expect(first.status).to.be.oneOf(['completed', 'failed']);",
+									"        }",
+									"    });",
+									"",
+									"    pm.test('Failed question metadata is internally consistent', function () {",
+									"        var json = pm.response.json();",
+									"        var failed = json.results.filter(function (item) { return item.status === 'failed'; });",
+									"        pm.expect(json.failed_questions).to.eql(failed.length);",
+									"        failed.forEach(function (item) {",
+									"            pm.expect(item.grade).to.eql('N/A');",
+									"            pm.expect(item.failure_reason).to.be.a('string').and.not.empty;",
+									"        }",
+									"    });",
+									"}",
+									"",
+									"if (statusCode === 202) {",
+									"    pm.test('Still processing', function () {",
+									"        var json = pm.response.json();",
+									"        pm.expect(json.status).to.eql('processing');",
+									"    });",
+									"}",
+									"",
+									"if (statusCode === 404) {",
+									"    pm.test('Error response has expected fields', function () {",
+									"        var json = pm.response.json();",
+									"        pm.expect(json).to.have.property('error');",
+									"        pm.expect(json).to.have.property('code');",
+									"    });",
+									"}"
+								]
+							}
+						}
+					],
+					"response": []
+				},
+				{
+					"name": "Get Task Result - Unknown Task",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/task/nonexistent-task-id-12345/result",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "task", "nonexistent-task-id-12345", "result"]
+						},
+						"description": "Attempts to fetch results for a task ID that does not exist. Expected to return HTTP 404 with an error object."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 404', function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test('Response is JSON', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('Error response has expected fields', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('error');",
+									"    pm.expect(json).to.have.property('code');",
+									"    pm.expect(json.code).to.eql(404);",
+									"});"
+								]
+							}
+						}
+					],
+					"response": []
+				},
+				{
+					"name": "Get All Results",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/results",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "results"]
+						},
+						"description": "Returns all stored assessment history summaries. Each entry is either a `single_question` or `multi_question` result type with relevant summary fields.\n\nSupports optional query parameters `student_id` and `question_id` for filtering (see other requests in this folder)."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is JSON', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('Response has results and count', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('results');",
+									"    pm.expect(json.results).to.be.an('array');",
+									"    pm.expect(json).to.have.property('count');",
+									"    pm.expect(json.count).to.be.a('number');",
+									"});",
+									"",
+									"pm.test('Result items have required fields', function () {",
+									"    var results = pm.response.json().results;",
+									"    if (results.length > 0) {",
+									"        results.forEach(function (item) {",
+									"            pm.expect(item).to.have.property('id');",
+									"            pm.expect(item).to.have.property('result_type');",
+									"            pm.expect(item).to.have.property('student_id');",
+									"            pm.expect(item).to.have.property('assessed_at');",
+									"            pm.expect(item.result_type).to.be.oneOf(['single_question', 'multi_question']);",
+									"        });",
+									"    }",
+									"});"
+								]
+							}
+						}
+					],
+					"response": []
+				},
+				{
+					"name": "Get Results By Student ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/results?student_id={{studentId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "results"],
+							"query": [
+								{
+									"key": "student_id",
+									"value": "{{studentId}}",
+									"description": "Filter results by student identifier"
+								}
+							]
+						},
+						"description": "Returns assessment history filtered by student ID. Only results belonging to the specified student are returned."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has results and count', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('results');",
+									"    pm.expect(json).to.have.property('count');",
+									"});",
+									"",
+									"pm.test('All results match requested student_id', function () {",
+									"    var results = pm.response.json().results;",
+									"    var expectedId = pm.collectionVariables.get('studentId');",
+									"    results.forEach(function (item) {",
+									"        pm.expect(item.student_id).to.eql(expectedId);",
+									"    });",
+									"});"
+								]
+							}
+						}
+					],
+					"response": []
+				},
+				{
+					"name": "Get Results By Question ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/results?question_id={{questionId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "results"],
+							"query": [
+								{
+									"key": "question_id",
+									"value": "{{questionId}}",
+									"description": "Filter results by question identifier"
+								}
+							]
+						},
+						"description": "Returns assessment history filtered by question ID. Only single-question results matching the specified question are returned."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has results and count', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('results');",
+									"    pm.expect(json).to.have.property('count');",
+									"});"
+								]
+							}
+						}
+					],
+					"response": []
+				},
+				{
+					"name": "Get Results - No Match Example",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/results?student_id=nonexistent-student-xyz",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "results"],
+							"query": [
+								{
+									"key": "student_id",
+									"value": "nonexistent-student-xyz",
+									"description": "A student ID that is unlikely to exist, to test empty result handling"
+								}
+							]
+						},
+						"description": "Queries results with a student ID that does not exist in the system. Expected to return HTTP 200 with an empty results array and count of 0."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Results array is empty', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.results).to.be.an('array');",
+									"    pm.expect(json.count).to.eql(0);",
+									"});"
+								]
+							}
+						}
+					],
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Negative Tests",
+			"description": "Validation and error-handling tests. These requests intentionally trigger error responses to verify the API enforces its validation rules correctly.\n\nAll requests in this folder are expected to return HTTP 400 or similar error codes.",
+			"item": [
+				{
+					"name": "Validation - Missing File",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "student_id",
+									"value": "{{studentId}}",
+									"type": "text",
+									"description": "Student ID without any file attached"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/assess",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "assess"]
+						},
+						"description": "Submits an assessment request without any answer file or image. Expected to return HTTP 400 with an error message indicating that an answer file is required."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 400', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Response is JSON', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('Error response has expected fields', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('error');",
+									"    pm.expect(json).to.have.property('code');",
+									"    pm.expect(json.code).to.eql(400);",
+									"});"
+								]
+							}
+						}
+					],
+					"response": []
+				},
+				{
+					"name": "Validation - Invalid max_marks (Zero)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": "{{manualImagePath}}",
+									"description": "Valid image file"
+								},
+								{
+									"key": "model_answer",
+									"value": "{{modelAnswer}}",
+									"type": "text",
+									"description": "Valid model answer"
+								},
+								{
+									"key": "max_marks",
+									"value": "0",
+									"type": "text",
+									"description": "Invalid max_marks value (must be 1\u2013100)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/assess",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "assess"]
+						},
+						"description": "Submits a manual assessment with `max_marks` set to 0, which is below the valid range of 1\u2013100. Expected to return HTTP 400 with a validation error."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 400', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Response is JSON', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('Error response indicates invalid max_marks', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('error');",
+									"    pm.expect(json).to.have.property('code');",
+									"    pm.expect(json.code).to.eql(400);",
+									"});"
+								]
+							}
+						}
+					],
+					"response": []
+				},
+				{
+					"name": "Validation - Manual Assessment With Question Paper",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": "{{manualImagePath}}",
+									"description": "Image of student answer"
+								},
+								{
+									"key": "model_answer",
+									"value": "{{modelAnswer}}",
+									"type": "text",
+									"description": "Model answer (triggers manual mode)"
+								},
+								{
+									"key": "question_file",
+									"type": "file",
+									"src": "{{questionFilePath}}",
+									"description": "Question paper file (not allowed in manual mode)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/assess",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "assess"]
+						},
+						"description": "Attempts manual assessment (with `model_answer`) while also including a `question_file`. Manual mode does not support question paper uploads. Expected to return HTTP 400."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 400', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Response is JSON', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('Error response has expected fields', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('error');",
+									"    pm.expect(json).to.have.property('code');",
+									"    pm.expect(json.code).to.eql(400);",
+									"});"
+								]
+							}
+						}
+					],
+					"response": []
+				},
+				{
+					"name": "Validation - Invalid File Type",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "answer_file",
+									"type": "file",
+									"src": "/absolute/path/to/sample-document.txt",
+									"description": "A .txt file which is not in the allowed extensions (jpg, jpeg, png, pdf)"
+								},
+								{
+									"key": "student_id",
+									"value": "{{studentId}}",
+									"type": "text",
+									"description": "Student identifier"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/assess",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "assess"]
+						},
+						"description": "Submits an assessment with a `.txt` file, which is not in the allowed upload extensions (jpg, jpeg, png, pdf). Expected to return HTTP 400 with an error indicating the file type is not supported.\n\nNote: Update the file path to point to an actual `.txt` file on your machine to test this locally."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 400', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Response is JSON', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('Error response has expected fields', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('error');",
+									"    pm.expect(json).to.have.property('code');",
+									"    pm.expect(json.code).to.eql(400);",
+									"});"
+								]
+							}
+						}
+					],
+					"response": []
+				}
+			]
+		}
+	]
+}

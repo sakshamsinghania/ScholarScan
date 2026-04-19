@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+
+# Credentials — never commit service account keys
+credentials/
+backend/credentials/
+
+# Uploads — user-generated content
+uploads/
+backend/uploads/
+
+# Node.js
+node_modules/
+frontend/node_modules/
+
+# Build output
+dist/
+dist-ssr/
+build/
+frontend/dist/
+
+# Backend environments and secrets
+backend/.env
+backend/venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+
+#extras
+extras/
+.claude/
