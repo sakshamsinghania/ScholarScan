@@ -20,7 +20,7 @@ class PdfService:
     def __init__(self, extract_text_fn: Callable[[str], str]):
         """
         Args:
-            extract_text_fn: OCR function (from core/ocr.py) for scanned pages.
+            extract_text_fn: OCR function (from core/ocr_google_vision.py) for scanned pages.
                              Signature: (image_path: str) -> str
         """
         self._extract_text_fn = extract_text_fn
