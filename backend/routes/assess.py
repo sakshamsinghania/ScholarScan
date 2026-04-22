@@ -6,6 +6,7 @@ import threading
 
 from flask import Blueprint, current_app, jsonify, request
 from models.assessment import AssessmentResponse, MultiAssessmentResponse, TaskStartResponse
+from app import auth_required_conditional, get_current_user_id, limiter
 
 assess_bp = Blueprint("assess", __name__)
 logger = logging.getLogger(__name__)
@@ -48,6 +49,8 @@ def _run_pipeline_async(app, eval_service, progress_service, task_id, **kwargs):
 
 
 @assess_bp.route("/api/assess", methods=["POST"])
+@limiter.limit("30/hour")
+@auth_required_conditional
 def assess():
     """
     Accept an answer file + optional model answer / question paper.
@@ -149,8 +152,9 @@ def assess():
             task_id = str(uuid.uuid4())
             progress_service = current_app.config["PROGRESS_SERVICE"]
             eval_service = current_app.config["EVALUATION_SERVICE"]
+            owner_id = get_current_user_id()
 
-            progress_service.create_task(task_id)
+            progress_service.create_task(task_id, owner_id=owner_id)
             progress_service.update(task_id, "upload_received", "running", "Processing upload...")
 
             # Launch pipeline in background thread

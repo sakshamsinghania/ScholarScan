@@ -1,6 +1,9 @@
 """Application configuration loaded from environment variables."""
 
 import os
+import secrets
+from datetime import timedelta
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -31,3 +34,18 @@ class Config:
         "LLM_CACHE_PATH",
         os.path.join(UPLOAD_FOLDER, "groq-cache.json"),
     )
+
+    # --- Auth ---
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", secrets.token_hex(32))
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(
+        seconds=int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES", "3600"))
+    )
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(
+        seconds=int(os.getenv("JWT_REFRESH_TOKEN_EXPIRES", str(86400 * 30)))
+    )
+    AUTH_REQUIRED = os.getenv("AUTH_REQUIRED", "true").lower() == "true"
+
+    # --- Rate limiting ---
+    RATE_LIMIT_ASSESS = os.getenv("RATE_LIMIT_ASSESS", "30/hour")
+    RATE_LIMIT_LOGIN = os.getenv("RATE_LIMIT_LOGIN", "10/minute")
+    RATE_LIMIT_GLOBAL = os.getenv("RATE_LIMIT_GLOBAL", "300/hour")

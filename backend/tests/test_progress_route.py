@@ -13,6 +13,7 @@ from app import create_app
 @pytest.fixture
 def client():
     app = create_app(testing=True)
+    app.config["AUTH_REQUIRED"] = False
     with app.test_client() as c:
         yield c, app
 
