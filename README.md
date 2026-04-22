@@ -12,12 +12,15 @@ Manual mode is the safer default for single-image grading. Document mode is stri
 ## Highlights
 
 - Flask API for grading, health checks, history, and async task progress
+- JWT authentication with role-based access and row-level authorization
+- Rate limiting on sensitive endpoints (login, assessment)
 - React + TypeScript dashboard for upload, live progress, results, and history
 - OCR and NLP preprocessing pipeline for noisy handwritten/scanned answers
 - Semantic and lexical similarity scoring
 - LLM-backed reference answer generation for document workflows
 - Capability-based health reporting instead of a simple up/down status
 - Bounded in-memory result history and task tracking
+- Pre-commit hooks (ruff, black, mypy, bandit) and GitHub Actions CI
 
 ## Assessment Modes
 
@@ -45,11 +48,11 @@ Use this when grading a full answer sheet or multi-question submission.
 
 ### Backend
 
-- `backend/app.py`: Flask application factory and service wiring
+- `backend/app.py`: Flask application factory, service wiring, auth and rate limiter init
 - `backend/config.py`: environment-driven configuration
-- `backend/routes`: API endpoints
-- `backend/services`: orchestration, progress tracking, storage, LLM coordination
-- `backend/models`: Pydantic response contracts
+- `backend/routes`: API endpoints (auth, assess, health, progress, results, task_result)
+- `backend/services`: orchestration, progress tracking, storage, LLM coordination, user management
+- `backend/models`: Pydantic response contracts (assessment, health, user)
 - `backend/core`: OCR, NLP preprocessing, similarity, scoring
 - `backend/file_handling`: upload validation and temp file cleanup
 - `backend/tests`: pytest suite
@@ -65,6 +68,7 @@ Use this when grading a full answer sheet or multi-question submission.
 
 The current graph metadata in `graphify-out/` identifies these as the main backend abstractions:
 
+- `UserService`
 - `LlmService`
 - `ResultStorageService`
 - `PdfService`
@@ -73,6 +77,16 @@ The current graph metadata in `graphify-out/` identifies these as the main backe
 - `QuestionService`
 - `ProgressService`
 - `AssessmentService`
+
+### Authentication & Authorization
+
+All data routes require a valid JWT access token (`Authorization: Bearer <token>`). The health endpoint remains public.
+
+- **Register** → `POST /api/auth/register` — creates a user, returns access + refresh tokens.
+- **Login** → `POST /api/auth/login` — validates credentials, returns tokens. Rate-limited to 10/minute.
+- **Refresh** → `POST /api/auth/refresh` — exchanges a refresh token for a new access token.
+- **Row-level access** — each task and stored result is tagged with the creating user's ID. Users can only view their own tasks, progress streams, and result history. Unauthorized cross-user access returns `403`.
+- **Feature flag** — set `AUTH_REQUIRED=false` to disable auth entirely for local development.
 
 ## How the Pipeline Works
 
@@ -98,6 +112,18 @@ The current graph metadata in `graphify-out/` identifies these as the main backe
 
 ## API Summary
 
+### `POST /api/auth/register`
+
+Create a new user account. Returns user info, access token, and refresh token.
+
+### `POST /api/auth/login`
+
+Authenticate with email and password. Returns tokens. Rate-limited to 10 requests/minute per IP.
+
+### `POST /api/auth/refresh`
+
+Exchange a refresh token for a new access token.
+
 ### `GET /api/health`
 
 Returns overall health plus capability flags such as:
@@ -108,12 +134,15 @@ Returns overall health plus capability flags such as:
 - PDF support
 - supported grading modes
 
+No authentication required.
+
 ### `POST /api/assess`
 
-Main assessment endpoint.
+Main assessment endpoint. **Requires JWT.**
 
 - returns a synchronous result for manual single-image grading
 - returns `202 Accepted` with a `task_id` for async document grading
+- rate-limited to 30 requests/hour per user
 
 Supported form fields include:
 
@@ -126,11 +155,11 @@ Supported form fields include:
 
 ### `GET /api/progress/stream/<task_id>`
 
-Streams task progress as Server-Sent Events.
+Streams task progress as Server-Sent Events. **Requires JWT.** Only the task owner can access the stream.
 
 ### `GET /api/task/<task_id>/result`
 
-Returns the final result when complete, `202` while processing, or `404` if the task does not exist.
+Returns the final result when complete, `202` while processing, or `404` if the task does not exist. **Requires JWT.** Owner-gated.
 
 ### `GET /api/results`
 
@@ -138,6 +167,8 @@ Returns stored history, with optional filters for:
 
 - `student_id`
 - `question_id`
+
+**Requires JWT.** Returns only the authenticated user's results.
 
 ## Runtime Notes
 
@@ -148,6 +179,8 @@ Returns stored history, with optional filters for:
 - Frontend local dev calls `http://localhost:5050/api` by default on localhost
 - Health reporting is capability-based: OCR, semantic similarity, LLM, and PDF support are exposed separately
 - In-memory task/result storage is bounded, but it is not durable across restarts
+- Authentication is enabled by default; set `AUTH_REQUIRED=false` to disable for local development
+- Login is rate-limited to 10 requests/minute; assessment to 30/hour per user
 
 ## Configuration
 
@@ -181,6 +214,18 @@ The backend loads environment variables from `.env` when available.
 | `LLM_BACKOFF_MAX_SECONDS` | `60` | Retry backoff ceiling |
 | `LLM_CACHE_PATH` | `uploads/groq-cache.json` | Disk-backed LLM cache |
 
+### Auth and rate limiting
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `JWT_SECRET_KEY` | random (dev only) | HMAC signing key for JWTs — **must be set in production** |
+| `JWT_ACCESS_TOKEN_EXPIRES` | `3600` | Access token TTL in seconds |
+| `JWT_REFRESH_TOKEN_EXPIRES` | `2592000` | Refresh token TTL in seconds (30 days) |
+| `AUTH_REQUIRED` | `true` | Enable JWT auth on data routes; set `false` for local dev |
+| `RATE_LIMIT_ASSESS` | `30/hour` | Per-user assessment rate limit |
+| `RATE_LIMIT_LOGIN` | `10/minute` | Per-IP login rate limit |
+| `RATE_LIMIT_GLOBAL` | `300/hour` | Global per-IP rate limit |
+
 ## Quick Start
 
 ### Backend
@@ -189,8 +234,10 @@ The backend loads environment variables from `.env` when available.
 cd backend
 pip install -r requirements.txt
 python3.11 -m pytest tests
-python3.11 app.py
+AUTH_REQUIRED=false python3.11 app.py  # local dev without auth
 ```
+
+Set `AUTH_REQUIRED=true` (the default) and provide `JWT_SECRET_KEY` for authenticated operation.
 
 ### Frontend
 
@@ -206,6 +253,8 @@ npm run dev
 
 ```text
 assessment-system/
+├── .github/workflows/ci.yml
+├── .pre-commit-config.yaml
 ├── backend/
 │   ├── app.py
 │   ├── config.py
@@ -230,9 +279,10 @@ assessment-system/
 
 ## Limitations
 
-- Result history is not persisted beyond process lifetime
+- Result history and user accounts are not persisted beyond process lifetime
 - Async task tracking is in memory and expires after a TTL
-- Production concerns like authentication, durable queues, and persistent storage are not fully implemented
+- User storage is in-memory (Postgres planned for a future phase)
+- Rate limiter uses in-memory backend (Redis planned for a future phase)
 - Document grading quality depends on OCR quality and question extraction accuracy
 - LLM-backed workflows depend on configured credentials and quota controls
 
@@ -240,7 +290,7 @@ assessment-system/
 
 The current project documentation records this baseline:
 
-- Backend tests: `115 passed, 8 skipped`
+- Backend tests: `161 passed, 1 failed (pre-existing), 8 skipped`
 - Frontend lint: passes
 - Frontend build: passes
 
