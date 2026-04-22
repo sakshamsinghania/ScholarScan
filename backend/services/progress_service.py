@@ -29,6 +29,7 @@ class _TaskState:
 
     __slots__ = (
         "task_id",
+        "owner_id",
         "stage",
         "status",
         "message",
@@ -38,8 +39,9 @@ class _TaskState:
         "updated_at",
     )
 
-    def __init__(self, task_id: str):
+    def __init__(self, task_id: str, owner_id: str | None = None):
         self.task_id = task_id
+        self.owner_id = owner_id
         self.stage: str | None = None
         self.status: str = "pending"
         self.message: str = ""
@@ -62,11 +64,11 @@ class ProgressService:
         self._lock = threading.Lock()
         self._task_ttl_seconds = task_ttl_seconds
 
-    def create_task(self, task_id: str) -> None:
+    def create_task(self, task_id: str, owner_id: str | None = None) -> None:
         """Register a new task for progress tracking."""
         with self._lock:
             self._evict_expired_locked()
-            self._tasks[task_id] = _TaskState(task_id)
+            self._tasks[task_id] = _TaskState(task_id, owner_id=owner_id)
 
     def update(self, task_id: str, stage: str, status: str, message: str = "") -> None:
         """
@@ -176,6 +178,18 @@ class ProgressService:
         """Remove a task from tracking. Silently ignores missing tasks."""
         with self._lock:
             self._tasks.pop(task_id, None)
+
+    def is_owner(self, task_id: str, owner_id: str | None) -> bool:
+        """Check if owner_id matches the task owner. None owner = no check."""
+        if owner_id is None:
+            return True
+        with self._lock:
+            state = self._tasks.get(task_id)
+            if not state:
+                return False
+            if state.owner_id is None:
+                return True
+            return state.owner_id == owner_id
 
     def _evict_expired_locked(self) -> None:
         """Remove expired task state while holding the service lock."""

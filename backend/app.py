@@ -1,15 +1,21 @@
 """Flask application factory — creates and configures the app."""
 
+import logging
 import os
 import re
 import shutil
+from functools import wraps
 
-from flask import Flask
+from flask import Flask, jsonify
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_identity
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 from config import Config
 from services.result_storage_service import ResultStorageService
 from services.progress_service import ProgressService
+from services.user_service import UserService
 
 DEFAULT_CORS_ORIGINS = (
     "http://localhost:3000",
@@ -21,6 +27,9 @@ DEFAULT_CORS_ORIGINS = (
 )
 LOCAL_DEV_ORIGIN_PATTERN = re.compile(r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$")
 DEFAULT_BACKEND_PORT = 5050
+
+# Module-level limiter with deferred app init — importable by route modules
+limiter = Limiter(key_func=get_remote_address, storage_uri="memory://")
 
 
 def _is_production() -> bool:
@@ -52,10 +61,38 @@ def _get_cors_origins() -> list[str | re.Pattern[str]]:
         else list(DEFAULT_CORS_ORIGINS)
     )
 
+    if _is_production() and "*" in origins:
+        logging.getLogger(__name__).warning(
+            "CORS_ORIGIN contains '*' in production — this is insecure"
+        )
+        origins = [o for o in origins if o != "*"]
+
     if not _is_production():
         origins.append(LOCAL_DEV_ORIGIN_PATTERN)
 
     return origins
+
+
+def auth_required_conditional(fn):
+    """Skip JWT verification when AUTH_REQUIRED is false."""
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        from flask import current_app
+        if current_app.config.get("AUTH_REQUIRED", True):
+            verify_jwt_in_request()
+        return fn(*args, **kwargs)
+    return wrapper
+
+
+def get_current_user_id() -> str | None:
+    """Return JWT identity if auth is active, else None."""
+    from flask import current_app
+    if not current_app.config.get("AUTH_REQUIRED", True):
+        return None
+    try:
+        return get_jwt_identity()
+    except Exception:
+        return None
 
 
 def _configure_runtime_capabilities(app: Flask, testing: bool) -> None:
@@ -99,6 +136,27 @@ def create_app(testing: bool = False) -> Flask:
     CORS(app, resources={r"/api/*": {"origins": _get_cors_origins()}})
     _configure_runtime_capabilities(app, testing)
 
+    # Auth
+    jwt = JWTManager(app)
+    user_service = UserService()
+    app.config["USER_SERVICE"] = user_service
+
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        return jsonify({"error": "Token has expired", "code": 401}), 401
+
+    @jwt.invalid_token_loader
+    def invalid_token_callback(error_string):
+        return jsonify({"error": "Invalid token", "code": 401}), 401
+
+    @jwt.unauthorized_loader
+    def missing_token_callback(error_string):
+        return jsonify({"error": "Authorization required", "code": 401}), 401
+
+    # Rate limiting
+    limiter.init_app(app)
+    app.config["LIMITER"] = limiter
+
     # Ensure upload folder exists
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
@@ -114,12 +172,14 @@ def create_app(testing: bool = False) -> Flask:
         _register_real_services(app, result_store)
 
     # Register blueprints
+    from routes.auth import auth_bp
     from routes.health import health_bp
     from routes.assess import assess_bp
     from routes.results import results_bp
     from routes.progress import progress_bp
     from routes.task_result import task_result_bp
 
+    app.register_blueprint(auth_bp)
     app.register_blueprint(health_bp)
     app.register_blueprint(assess_bp)
     app.register_blueprint(results_bp)
@@ -136,7 +196,7 @@ def _register_real_services(app: Flask, result_store: ResultStorageService) -> N
     from core.similarity import SBERTSimilarity, compute_similarity
     from core.scoring import score_answer
 
-    from file_handling.image_file_handler import FileHandler
+    from file_handling.file_handler import FileHandler
     from services.assessment_service import AssessmentService
     from services.pdf_service import PdfService
     from services.question_service import QuestionService
@@ -184,7 +244,7 @@ def _register_real_services(app: Flask, result_store: ResultStorageService) -> N
 def _register_mock_services(app: Flask, result_store: ResultStorageService) -> None:
     """Wire up mock services for testing — no ML models loaded."""
     from unittest.mock import MagicMock
-    from file_handling.image_file_handler import FileHandler
+    from file_handling.file_handler import FileHandler
     from services.assessment_service import AssessmentService
     from services.pdf_service import PdfService
     from services.question_service import QuestionService

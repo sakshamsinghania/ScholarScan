@@ -2,6 +2,7 @@
 
 from flask import Blueprint, current_app, jsonify, request
 from models.assessment import MultiHistoryEntry, SingleHistoryEntry
+from app import auth_required_conditional, get_current_user_id
 
 results_bp = Blueprint("results", __name__)
 
@@ -43,19 +44,21 @@ def _to_history_entry(result: dict) -> dict:
 
 
 @results_bp.route("/api/results", methods=["GET"])
+@auth_required_conditional
 def get_results():
     """Return all stored assessment results, with optional filtering."""
     store = current_app.config["RESULT_STORE"]
+    owner_id = get_current_user_id()
 
     student_id = request.args.get("student_id")
     question_id = request.args.get("question_id")
 
     if student_id or question_id:
         results = store.get_filtered(
-            student_id=student_id, question_id=question_id
+            student_id=student_id, question_id=question_id, owner_id=owner_id
         )
     else:
-        results = store.get_all()
+        results = store.get_all(owner_id=owner_id)
 
     history = [_to_history_entry(result) for result in results]
     return jsonify({"results": history, "count": len(history)})

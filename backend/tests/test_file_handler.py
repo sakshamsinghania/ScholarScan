@@ -11,7 +11,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from file_handling.image_file_handler import FileHandler
+from file_handling.file_handler import FileHandler
 
 
 @pytest.fixture
