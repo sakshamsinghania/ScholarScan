@@ -2,7 +2,7 @@
 
 import json
 
-from flask import Blueprint, Response, current_app, jsonify
+from flask import Blueprint, Response, current_app, jsonify  # noqa: F401 current_app used in generate()
 from app import auth_required_conditional, get_current_user_id
 
 progress_bp = Blueprint("progress", __name__)
@@ -27,8 +27,16 @@ def stream_progress(task_id: str):
     if not progress_service.is_owner(task_id, owner_id):
         return jsonify({"error": "Forbidden", "code": 403}), 403
 
+    # Capture config before entering the generator (app context not guaranteed inside)
+    use_celery = current_app.config.get("USE_CELERY", False)
+    redis_url = current_app.config.get("REDIS_URL", "redis://localhost:6379/0")
+
     def generate():
-        for event in progress_service.stream(task_id, timeout=120):
+        if use_celery:
+            stream = progress_service.stream_from_redis(task_id, redis_url=redis_url, timeout=120)
+        else:
+            stream = progress_service.stream(task_id, timeout=120)
+        for event in stream:
             yield f"data: {json.dumps(event)}\n\n"
 
     return Response(

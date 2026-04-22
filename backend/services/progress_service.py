@@ -1,4 +1,9 @@
-"""Thread-safe pipeline progress tracking for real-time SSE updates."""
+"""Pipeline progress tracking for real-time SSE updates.
+
+In-memory (queue-based) by default. When USE_CELERY=true the SSE route
+subscribes from Redis pub/sub instead of the in-process queue — see
+stream_from_redis() below.
+"""
 
 import queue
 import threading
@@ -212,3 +217,55 @@ class ProgressService:
             if key == stage:
                 return label
         return stage
+
+    # ------------------------------------------------------------------
+    # Phase 3: Redis pub/sub stream (used when USE_CELERY=true)
+    # ------------------------------------------------------------------
+
+    def stream_from_redis(
+        self,
+        task_id: str,
+        redis_url: str,
+        timeout: float = 120,
+    ) -> "Generator[dict, None, None]":
+        """
+        Subscribe to Redis channel ``progress:{task_id}`` and yield events.
+
+        Falls back to in-memory queue stream if Redis is unavailable.
+        """
+        try:
+            import redis as redis_lib
+            r = redis_lib.from_url(redis_url)
+            r.ping()
+        except Exception:
+            # Redis unavailable — use existing in-memory queue
+            yield from self.stream(task_id, timeout=timeout)
+            return
+
+        pubsub = r.pubsub()
+        channel = f"progress:{task_id}"
+        pubsub.subscribe(channel)
+
+        deadline = time.monotonic() + timeout
+        try:
+            while time.monotonic() < deadline:
+                remaining = deadline - time.monotonic()
+                message = pubsub.get_message(timeout=min(remaining, 1.0))
+                if message and message["type"] == "message":
+                    import json
+                    try:
+                        event = json.loads(message["data"])
+                    except (TypeError, ValueError):
+                        continue
+                    yield event
+                    # Also update in-memory state for get_current() / is_owner()
+                    stage = event.get("stage", "")
+                    status = event.get("status", "running")
+                    msg = event.get("message", "")
+                    if stage:
+                        self.update(task_id, stage, status, msg)
+                    if event.get("__done") or stage == _TERMINAL_STAGE or status == _ERROR_STATUS:
+                        return
+        finally:
+            pubsub.unsubscribe(channel)
+            pubsub.close()

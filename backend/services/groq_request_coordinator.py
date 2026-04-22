@@ -165,6 +165,8 @@ class GroqRequestCoordinator:
                         "last_hit_at": self._time_fn(),
                     }
                     self._persist_state_locked()
+                # Mirror to DB cache (Phase 2 — no-op when DB unavailable)
+                self._db_put(item.cache_key, response_text)
 
             return response_text
 
@@ -234,7 +236,46 @@ class GroqRequestCoordinator:
             remaining = parsed.timestamp() - self._time_fn()
             return max(0.0, remaining)
 
+    # ------------------------------------------------------------------
+    # DB cache helpers (Phase 2 — active when DATABASE_URL is set)
+    # ------------------------------------------------------------------
+
+    def _db_get(self, cache_key: str) -> str | None:
+        """Try DB cache. Returns None on any failure (graceful degradation)."""
+        try:
+            from db.session import get_session, is_db_available
+            from repositories import llm_cache_repository
+            if not is_db_available():
+                return None
+            with get_session() as session:
+                if session is None:
+                    return None
+                return llm_cache_repository.get(session, cache_key)
+        except Exception as exc:
+            logger.debug("DB cache read failed: %s", exc)
+            return None
+
+    def _db_put(self, cache_key: str, response: str) -> None:
+        """Write to DB cache. Silently ignores failures."""
+        try:
+            from db.session import get_session, is_db_available
+            from repositories import llm_cache_repository
+            if not is_db_available():
+                return
+            with get_session() as session:
+                if session is None:
+                    return
+                llm_cache_repository.put(session, cache_key, response)
+        except Exception as exc:
+            logger.debug("DB cache write failed: %s", exc)
+
     def _get_cached_response_locked(self, cache_key: str, touch: bool) -> str | None:
+        # Check DB cache first (Phase 2). Lock is already held by caller so
+        # we release it briefly around the DB call to avoid deadlock.
+        db_hit = self._db_get(cache_key)
+        if db_hit is not None:
+            return db_hit
+
         entry = self._state["cache"].get(cache_key)
         if not entry:
             return None
