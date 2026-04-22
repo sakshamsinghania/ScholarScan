@@ -49,3 +49,14 @@ class Config:
     RATE_LIMIT_ASSESS = os.getenv("RATE_LIMIT_ASSESS", "30/hour")
     RATE_LIMIT_LOGIN = os.getenv("RATE_LIMIT_LOGIN", "10/minute")
     RATE_LIMIT_GLOBAL = os.getenv("RATE_LIMIT_GLOBAL", "300/hour")
+
+    # --- Persistence (Phase 2) ---
+    # Set DATABASE_URL to enable Postgres-backed storage (Postgres or SQLite).
+    # Unset → RAM-only fallback (safe for local dev and tests).
+    DATABASE_URL = os.getenv("DATABASE_URL", "")
+
+    # --- Job queue (Phase 3) ---
+    # Set USE_CELERY=true to route async jobs through Celery/Redis.
+    # Unset / false → existing threading fallback (safe for local dev and tests).
+    USE_CELERY = os.getenv("USE_CELERY", "false").lower() == "true"
+    REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")

@@ -157,23 +157,41 @@ def assess():
             progress_service.create_task(task_id, owner_id=owner_id)
             progress_service.update(task_id, "upload_received", "running", "Processing upload...")
 
-            # Launch pipeline in background thread
-            app = current_app._get_current_object()
-            thread = threading.Thread(
-                target=_run_pipeline_async,
-                args=(app, eval_service, progress_service, task_id),
-                kwargs={
-                    "answer_file_path": temp_path,
-                    "file_type": file_type,
-                    "question_file_path": question_temp_path,
-                    "question_file_type": question_file_type,
-                    "student_id": student_id,
-                    "max_marks_per_question": max_marks,
-                },
-                daemon=True,
-            )
-            thread.start()
-            logger.info("Queued async assessment task %s for %s", task_id, student_id)
+            if current_app.config.get("USE_CELERY", False):
+                # Phase 3: durable Celery task
+                from workers.tasks import evaluate_assessment
+                evaluate_assessment.apply_async(
+                    kwargs={
+                        "task_id": task_id,
+                        "answer_file_path": temp_path,
+                        "file_type": file_type,
+                        "question_file_path": question_temp_path,
+                        "question_file_type": question_file_type,
+                        "student_id": student_id,
+                        "max_marks_per_question": max_marks,
+                        "owner_id": owner_id,
+                    },
+                    task_id=task_id,
+                )
+                logger.info("Enqueued Celery task %s for %s", task_id, student_id)
+            else:
+                # Thread fallback (Phase 0/1 behaviour)
+                app = current_app._get_current_object()
+                thread = threading.Thread(
+                    target=_run_pipeline_async,
+                    args=(app, eval_service, progress_service, task_id),
+                    kwargs={
+                        "answer_file_path": temp_path,
+                        "file_type": file_type,
+                        "question_file_path": question_temp_path,
+                        "question_file_type": question_file_type,
+                        "student_id": student_id,
+                        "max_marks_per_question": max_marks,
+                    },
+                    daemon=True,
+                )
+                thread.start()
+                logger.info("Queued async assessment task %s for %s", task_id, student_id)
 
             response = TaskStartResponse.model_validate(
                 {"task_id": task_id, "status": "processing"}

@@ -13,6 +13,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 from config import Config
+from db.session import init_db, create_all_tables
 from services.result_storage_service import ResultStorageService
 from services.progress_service import ProgressService
 from services.user_service import UserService
@@ -135,6 +136,17 @@ def create_app(testing: bool = False) -> Flask:
 
     CORS(app, resources={r"/api/*": {"origins": _get_cors_origins()}})
     _configure_runtime_capabilities(app, testing)
+
+    # Phase 2: initialise DB when DATABASE_URL is configured
+    if app.config.get("DATABASE_URL"):
+        db_ok = init_db(app.config["DATABASE_URL"])
+        if db_ok:
+            create_all_tables()
+
+    # Phase 3: bind Celery to this app when USE_CELERY is enabled
+    if app.config.get("USE_CELERY"):
+        from workers.celery_app import init_celery
+        init_celery(app)
 
     # Auth
     jwt = JWTManager(app)

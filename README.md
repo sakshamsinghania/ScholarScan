@@ -19,8 +19,11 @@ Manual mode is the safer default for single-image grading. Document mode is stri
 - Semantic and lexical similarity scoring
 - LLM-backed reference answer generation for document workflows
 - Capability-based health reporting instead of a simple up/down status
-- Bounded in-memory result history and task tracking
+- **Postgres-backed result storage** with SQLAlchemy 2.0 + Alembic migrations (RAM fallback for local dev)
+- **Celery + Redis durable job queue** — async assessment jobs survive worker restart (thread fallback behind `USE_CELERY` flag)
+- **Redis pub/sub SSE streaming** — progress events published by workers, subscribed by SSE endpoints
 - Pre-commit hooks (ruff, black, mypy, bandit) and GitHub Actions CI
+- Full Docker Compose stack: web, Celery worker, Flower, Postgres, Redis
 
 ## Assessment Modes
 
@@ -70,13 +73,28 @@ The current graph metadata in `graphify-out/` identifies these as the main backe
 
 - `UserService`
 - `LlmService`
-- `ResultStorageService`
+- `ResultStorageService` — Postgres-backed (RAM fallback when `DATABASE_URL` unset)
 - `PdfService`
-- `GroqRequestCoordinator`
+- `GroqRequestCoordinator` — LLM cache mirrors to `llm_cache` DB table alongside JSON file
 - `EvaluationService`
 - `QuestionService`
-- `ProgressService`
+- `ProgressService` — in-memory queue (thread mode) or Redis pub/sub (`USE_CELERY=true`)
 - `AssessmentService`
+
+### Persistence Layer (Phase 2)
+
+- `backend/db/session.py` — SQLAlchemy engine + context-manager session factory
+- `backend/db/models.py` — ORM models: `Assessment`, `QuestionResult`, `LlmCache`, `ProgressEvent`
+- `backend/repositories/` — `assessment_repository`, `llm_cache_repository`
+- `backend/migrations/` — Alembic env + initial migration (`0001_initial_schema`)
+- Activated by `DATABASE_URL` env var; unset → RAM fallback (tests unaffected)
+
+### Job Queue (Phase 3)
+
+- `backend/workers/celery_app.py` — Celery app with Flask `ContextTask`
+- `backend/workers/tasks.py:evaluate_assessment` — durable Celery task replacing `threading.Thread`
+- Activated by `USE_CELERY=true`; default `false` keeps existing thread path
+- Progress published to Redis channel `progress:{task_id}`; SSE route subscribes
 
 ### Authentication & Authorization
 
@@ -182,6 +200,46 @@ Returns stored history, with optional filters for:
 - Authentication is enabled by default; set `AUTH_REQUIRED=false` to disable for local development
 - Login is rate-limited to 10 requests/minute; assessment to 30/hour per user
 
+## Quick Start
+
+### Full stack (Docker Compose — Phase 2 + 3)
+
+```bash
+cp .env.example .env        # set GROQ_API_KEY + JWT_SECRET_KEY
+docker compose up --build
+# Web:    http://localhost:5050
+# Flower: http://localhost:5555
+```
+
+### Backend (local dev — RAM mode, no DB/Redis required)
+
+```bash
+cd backend
+pip install -r requirements.txt
+python3.11 -m pytest tests
+AUTH_REQUIRED=false python3.11 app.py
+```
+
+### Backend with Postgres + Celery (local)
+
+```bash
+export DATABASE_URL=postgresql+psycopg://user:pass@localhost:5432/scholarscan
+export REDIS_URL=redis://localhost:6379/0
+export USE_CELERY=true
+cd backend && alembic upgrade head
+python3.11 app.py &
+celery -A workers.celery_app.celery worker --loglevel=info
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install && npm run dev
+```
+
+---
+
 ## Configuration
 
 The backend loads environment variables from `.env` when available.
@@ -226,28 +284,14 @@ The backend loads environment variables from `.env` when available.
 | `RATE_LIMIT_LOGIN` | `10/minute` | Per-IP login rate limit |
 | `RATE_LIMIT_GLOBAL` | `300/hour` | Global per-IP rate limit |
 
-## Quick Start
+### Persistence and job queue (Phase 2 + 3)
 
-### Backend
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | empty | SQLAlchemy DB URL. Unset → in-memory fallback. Example: `postgresql+psycopg://user:pass@localhost:5432/scholarscan` |
+| `USE_CELERY` | `false` | Route async jobs through Celery. `false` → threading fallback |
+| `REDIS_URL` | `redis://localhost:6379/0` | Celery broker + progress pub/sub channel |
 
-```bash
-cd backend
-pip install -r requirements.txt
-python3.11 -m pytest tests
-AUTH_REQUIRED=false python3.11 app.py  # local dev without auth
-```
-
-Set `AUTH_REQUIRED=true` (the default) and provide `JWT_SECRET_KEY` for authenticated operation.
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run lint
-npm run build
-npm run dev
-```
 
 ## Repository Layout
 
@@ -255,14 +299,30 @@ npm run dev
 assessment-system/
 ├── .github/workflows/ci.yml
 ├── .pre-commit-config.yaml
+├── Dockerfile                  # web (multi-stage)
+├── Dockerfile.worker           # Celery worker
+├── docker-compose.yml          # full stack: web, worker, flower, postgres, redis
 ├── backend/
 │   ├── app.py
 │   ├── config.py
+│   ├── alembic.ini
 │   ├── core/
+│   ├── db/                     # Phase 2: SQLAlchemy engine + ORM models
+│   │   ├── session.py
+│   │   └── models.py
 │   ├── file_handling/
+│   ├── migrations/             # Phase 2: Alembic migrations
+│   │   ├── env.py
+│   │   └── versions/0001_initial_schema.py
 │   ├── models/
+│   ├── repositories/           # Phase 2: DB access layer
+│   │   ├── assessment_repository.py
+│   │   └── llm_cache_repository.py
 │   ├── routes/
 │   ├── services/
+│   ├── workers/                # Phase 3: Celery
+│   │   ├── celery_app.py
+│   │   └── tasks.py
 │   └── tests/
 ├── frontend/
 │   ├── src/
@@ -279,20 +339,19 @@ assessment-system/
 
 ## Limitations
 
-- Result history and user accounts are not persisted beyond process lifetime
-- Async task tracking is in memory and expires after a TTL
-- User storage is in-memory (Postgres planned for a future phase)
-- Rate limiter uses in-memory backend (Redis planned for a future phase)
+- Result history is Postgres-backed when `DATABASE_URL` is set; otherwise in-memory (lost on restart)
+- User storage is still in-memory dict — Postgres user table planned for a future phase
+- Rate limiter uses in-memory backend — Redis backend planned for a future phase
+- Async tasks use Celery when `USE_CELERY=true`; otherwise `threading.Thread` (not restart-safe)
 - Document grading quality depends on OCR quality and question extraction accuracy
 - LLM-backed workflows depend on configured credentials and quota controls
 
 ## Verification Snapshot
 
-The current project documentation records this baseline:
-
-- Backend tests: `161 passed, 1 failed (pre-existing), 8 skipped`
+- Backend tests: `160 passed, 1 failed (pre-existing), 8 skipped` — no regressions from Phase 2/3
 - Frontend lint: passes
 - Frontend build: passes
+- Graphify graph: 887 nodes, 1253 edges, 126 communities (rebuilt post Phase 2/3)
 
 ## Contributor Notes
 
