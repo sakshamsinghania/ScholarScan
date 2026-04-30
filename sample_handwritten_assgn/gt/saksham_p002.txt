@@ -1,0 +1,30 @@
+Limitations:
+• Cold start latency (100ms-2s on first invocation)
+• Execution time limits (AWS Lambda max: 15 min)
+• Stateless by design, state needs external
+  storage.
+• Vendor lock-in; hard to migrate
+• Difficult to debug/trace across many
+  short-lived invocations.
+
+Q3. Explain how Google BigQuery handles
+large-scale analytics efficiently.
+BigQuery achieves efficiency through:
+
+• Columnar storage (Capacitor) - reads only
+  queried columns, minimizing I/O.
+• Dremel architecture - query tree fans out
+  to thousands of parallel leaf nodes,
+  aggregation happens at each level as
+  results travel upward
+• Separation of storage and compute - scales
+  independently, thousands of slots execute
+  in parallel
+• Query optimizer - predicate pushdown,
+  join reordering, broadcast vs shuffle join
+  selection.
+• Partitioning & clustering - partition pruning
+  skips entire date/range partitioning, clustering
+  orders data for faster scans.
+• BI Engine - in-memory caching for
+  sub-second repeated queries

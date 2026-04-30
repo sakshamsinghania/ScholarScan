@@ -1,0 +1,32 @@
+Name: Saksham Singhania
+Roll No.: 2329310033        __/__/__
+
+Cloud Computing
+Assignment - 2
+
+Q1. Explain the architecture of a Helm Chart,
+including its main components.
+A Helm Chart is a packaged Kubernetes
+application. Key components:
+
+• Chart.yaml - metadata: name, version, description
+• values.yaml - default config parameters (overridable at
+  deploy time)
+• templates/ - Go-templated Kubernetes YAML files
+  (Deployments, Services, etc.)
+• charts/ - sub-chart dependencies (e.g., Redis, PostgreSQL)
+• crds/ - Custom Resource Definitions to install before
+  templates
+• NOTES.txt - post-install instructions printed to
+  terminal
+
+Flow: values.yaml + templates/ → Helm engine renders
+→ pure Kubernetes YAML → applied to cluster
+
+Q2. Discuss the advantages and limitations of
+Serverless (FaaS).
+Advantages:
+• No server management, provider handles infra.
+• Auto-scale from zero to thousands of instances.
+• Pay-per-execution (no idle cost)
+• Fast deployment and event-driven integration.

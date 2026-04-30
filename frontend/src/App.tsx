@@ -1,13 +1,20 @@
-import { useState, useCallback } from 'react'
-import { BookOpen, AlertTriangle } from 'lucide-react'
+import { useState, useCallback, useEffect } from 'react'
+import { BookOpen, AlertTriangle, LogOut, Shield } from 'lucide-react'
 import type { AnyAssessmentResult } from './types/assessment'
+import { assessmentApi } from './api/assessment-api'
+import { useAuth } from './auth/useAuth'
+import { AuthCard } from './components/auth/AuthCard'
 import { HealthBadge } from './components/HealthBadge'
 import { AssessmentForm } from './components/AssessmentForm'
 import { ResultsDisplay } from './components/ResultsDisplay'
 import { ResultsHistory } from './components/ResultsHistory'
 import { ProgressTracker } from './components/ProgressTracker'
+import { ToastHost } from './components/ToastHost'
+
+const ACTIVE_TASK_KEY = 'scholarscan.activeTask'
 
 const App = () => {
+  const { user, status, logout } = useAuth()
   const [result, setResult] = useState<AnyAssessmentResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null)
@@ -17,11 +24,13 @@ const App = () => {
     setResult(next)
     setError(null)
     setActiveTaskId(null)
+    localStorage.removeItem(ACTIVE_TASK_KEY)
     setHistoryRefreshToken((t) => t + 1)
   }, [])
 
   const handleTaskStarted = useCallback((taskId: string) => {
     setActiveTaskId(taskId)
+    localStorage.setItem(ACTIVE_TASK_KEY, taskId)
     setResult(null)
     setError(null)
   }, [])
@@ -30,7 +39,47 @@ const App = () => {
     setError(msg)
     setResult(null)
     setActiveTaskId(null)
+    localStorage.removeItem(ACTIVE_TASK_KEY)
   }, [])
+
+  // Restore active task on mount
+  useEffect(() => {
+    if (status !== 'authed') return
+    const savedTaskId = localStorage.getItem(ACTIVE_TASK_KEY)
+    if (!savedTaskId) return
+
+    assessmentApi.getTaskResult(savedTaskId)
+      .then((res: Response) => {
+        if (res.status === 202) {
+          setActiveTaskId(savedTaskId)
+        } else if (res.status === 200) {
+          res.json().then((data: AnyAssessmentResult) => {
+            setResult(data)
+            localStorage.removeItem(ACTIVE_TASK_KEY)
+          })
+        } else {
+          localStorage.removeItem(ACTIVE_TASK_KEY)
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem(ACTIVE_TASK_KEY)
+      })
+  }, [status])
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-surface-0)' }}>
+        <div className="text-center animate-fade-in">
+          <BookOpen size={28} className="mx-auto mb-3 subtle-pulse" style={{ color: 'var(--color-accent)' }} />
+          <p className="text-sm" style={{ color: 'var(--color-text-tertiary)' }}>Loading…</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (status === 'anon') {
+    return <AuthCard />
+  }
 
   const errorTitle = error?.toLowerCase().includes('assessment api')
     ? 'Assessment API unavailable'
@@ -38,6 +87,8 @@ const App = () => {
 
   return (
     <div className="min-h-screen">
+      <ToastHost />
+
       {/* ── Header ── */}
       <header className="sticky top-0 z-20 px-6 py-4 flex items-center justify-between" style={{ background: 'var(--color-surface-0)', borderBottom: '1px solid var(--color-border)' }}>
         <div className="flex items-center gap-3">
@@ -53,7 +104,29 @@ const App = () => {
             </p>
           </div>
         </div>
-        <HealthBadge />
+        <div className="flex items-center gap-3">
+          <HealthBadge />
+          {user && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-md" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
+              <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{user.email}</span>
+              {user.role === 'admin' && (
+                <span className="flex items-center gap-1 text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--color-accent-subtle)', color: 'var(--color-accent)' }}>
+                  <Shield size={10} />
+                  admin
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={logout}
+                className="p-1 rounded hover-surface-3"
+                style={{ color: 'var(--color-text-tertiary)' }}
+                title="Sign out"
+              >
+                <LogOut size={14} />
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
       {/* ── Main layout ── */}

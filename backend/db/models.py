@@ -100,6 +100,20 @@ class Assessment(Base):
     )
 
 
+class UserAccount(Base):
+    """Persisted user credentials for login/register."""
+
+    __tablename__ = "users"
+
+    id: Mapped[str] = mapped_column(PortableUUID, primary_key=True, default=_new_uuid)
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str] = mapped_column(String(32), default="teacher")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+
+
 class QuestionResult(Base):
     """Per-question scoring breakdown for document assessments."""
 

@@ -60,3 +60,17 @@ class TestLlmConfiguration:
             backoff_max_seconds=60,
             cache_path="uploads/test-groq-cache.json",
         )
+
+
+class TestRuntimeCapabilities:
+    def test_vision_marked_configured_when_api_key_exists(self, monkeypatch):
+        app = Flask(__name__)
+        app.config["MISTRAL_API_KEY"] = ""
+
+        monkeypatch.delenv("GOOGLE_APPLICATION_CREDENTIALS", raising=False)
+        monkeypatch.setenv("GOOGLE_VISION_API_KEY", "test-vision-key")
+
+        backend_app._configure_runtime_capabilities(app, testing=False)
+
+        assert app.config["VISION_CREDENTIALS_CONFIGURED"] is True
+        assert app.config["OCR_AVAILABLE"] is True

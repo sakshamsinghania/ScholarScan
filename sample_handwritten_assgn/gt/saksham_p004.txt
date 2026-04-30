@@ -1,0 +1,30 @@
+Q6. Discuss the role of Helm in DevOps
+and CI/CD pipelines.
+Core roles:
+• Templating - single chart deploys to dev/
+  staging/prod via different
+  values.yaml
+• Release Tracking - every deploy is a versioned
+  revision; helm rollback reverts
+  instantly
+• Dependency Management - declares all app
+  dependencies in Chart.yaml
+
+CI/CD pipeline flow:
+1. Code push → Docker image built and pushed
+   to registry
+2. Helm package → chart pushed to Helm repo
+3. helm upgrade --install with environment-specific
+   values file
+4. helm test runs in-cluster smoke tests
+5. On failure: helm rollback restores previous
+   revision automatically
+
+GitOps: Tools like Argo CD/Flux watch
+Git for chart changes and auto-sync
+the cluster, making Helm charts the
+deployment artifact and Git the source
+of truth.
+
+Q7. Explain the working of edge inference with
+a step-by-step process.

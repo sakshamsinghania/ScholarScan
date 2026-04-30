@@ -1,0 +1,16 @@
+6) Role of Helm in DevOps & CI/CD pipelines
+→ Simplifies deployment of Kubernetes applications
+→ Enables version control of application configurations
+→ Supports automation in CI/CD pipelines
+→ Allows easy rollbacks to previous versions
+→ Ensures consistency across different environments
+• Helm improves efficiency & reliability in DevOps workflows.
+
+7) Working of edge inference : it refers to running machine models on edge devices instead of cloud.
+Steps:
+* Data is collected on the edge device
+* Data is preprocessed locally
+* A trained model is deployed on the device
+* Real time inference is performed
+* Immediate output is generated.
+This reduces latency & enhances data privacy.

@@ -3,9 +3,11 @@
 import logging
 import os
 import tempfile
-from typing import Callable
+from typing import Callable, Optional
 
 import pdfplumber
+
+from adapters.ocr.base import OcrPage, OcrResult
 
 logger = logging.getLogger(__name__)
 
@@ -15,15 +17,18 @@ class PdfService:
     Extracts text from PDFs using pdfplumber for digital content.
     Falls back to OCR (via injected extract_text_fn) for scanned pages
     that have no extractable text.
+
+    When an ocr_extract_result_fn is provided, PDFs can be routed through
+    Mistral OCR natively (bypassing pdfplumber for scanned PDFs).
     """
 
-    def __init__(self, extract_text_fn: Callable[[str], str]):
-        """
-        Args:
-            extract_text_fn: OCR function (from core/ocr_google_vision.py) for scanned pages.
-                             Signature: (image_path: str) -> str
-        """
+    def __init__(
+        self,
+        extract_text_fn: Callable[[str], str],
+        ocr_extract_result_fn: Optional[Callable[[str], OcrResult]] = None,
+    ):
         self._extract_text_fn = extract_text_fn
+        self._ocr_extract_result_fn = ocr_extract_result_fn
 
     def extract_text(
         self,
@@ -113,3 +118,57 @@ class PdfService:
                 exc,
             )
             return ""
+
+    def extract_result(
+        self,
+        pdf_path: str,
+        on_progress: Callable[[int, int, str], None] | None = None,
+    ) -> OcrResult:
+        """Extract text from PDF and return a page-aware OcrResult.
+
+        If an OCR provider that supports native PDF ingestion is available
+        (e.g. Mistral), route through it first. Fall back to pdfplumber+OCR.
+        """
+        if not os.path.exists(pdf_path):
+            raise FileNotFoundError(f"PDF file not found: {pdf_path}")
+
+        if self._ocr_extract_result_fn:
+            try:
+                result = self._ocr_extract_result_fn(pdf_path)
+                if result.text.strip():
+                    return result
+            except Exception as exc:
+                logger.warning("PDF native OCR failed, falling back to pdfplumber: %s", exc)
+
+        page_texts: list[str] = []
+        with pdfplumber.open(pdf_path) as pdf:
+            total_pages = len(pdf.pages)
+            for i, page in enumerate(pdf.pages):
+                if self.is_scanned_page(page):
+                    ocr_text = self._ocr_page(pdf_path, i)
+                    page_texts.append(ocr_text)
+                    extraction_mode = "ocr"
+                else:
+                    text = page.extract_text() or ""
+                    page_texts.append(text)
+                    extraction_mode = "digital"
+
+                if on_progress:
+                    on_progress(i + 1, total_pages, extraction_mode)
+
+        combined = "\n\n".join(page_texts).strip()
+        if not combined:
+            raise ValueError(
+                "No text could be extracted from the PDF. "
+                "Check OCR connectivity or the local Tesseract installation."
+            )
+
+        ocr_pages = tuple(
+            OcrPage(index=i, markdown=t) for i, t in enumerate(page_texts)
+        )
+        return OcrResult(
+            text=combined,
+            confidence=0.7,
+            provider="pdfplumber",
+            page_data=ocr_pages,
+        )

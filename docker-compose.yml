@@ -17,6 +17,7 @@ x-backend-env: &backend-env
   USE_CELERY: "true"
   FLASK_DEBUG: "false"
   GROQ_API_KEY: ${GROQ_API_KEY:-}
+  GOOGLE_VISION_API_KEY: ${GOOGLE_VISION_API_KEY:-}
   JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-in-production}
   AUTH_REQUIRED: "true"
   CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}

@@ -8,14 +8,22 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+from adapters.ocr.base import OcrPage, OcrResult
 from services.evaluation_service import EvaluationService
-from services.llm_service import LlmService
-from services.question_service import DetectedQuestion
+from services.qa_extractor import QaSegment
+
+
+def _mock_ocr_result(text: str) -> OcrResult:
+    return OcrResult(
+        text=text,
+        confidence=0.9,
+        provider="mock",
+        page_data=(OcrPage(index=0, markdown=text),),
+    )
 
 
 @pytest.fixture
 def mock_assessment_service():
-    """Mock AssessmentService that returns predictable results."""
     svc = MagicMock()
     svc.assess.return_value = {
         "extracted_text": "student answer text",
@@ -37,25 +45,27 @@ def mock_assessment_service():
 @pytest.fixture
 def mock_pdf_service():
     svc = MagicMock()
-    svc.extract_text.return_value = (
+    text = (
         "Q1. What is photosynthesis?\n"
         "Plants use sunlight to make food.\n\n"
         "Q2. What is gravity?\n"
         "Force that pulls objects down."
     )
+    svc.extract_result.return_value = _mock_ocr_result(text)
+    svc.extract_text.return_value = text
     return svc
 
 
 @pytest.fixture
-def mock_question_service():
+def mock_qa_extractor():
     svc = MagicMock()
-    svc.detect_questions.return_value = [
-        DetectedQuestion(question_id="Q1", text="What is photosynthesis?", answer_text="Plants use sunlight to make food."),
-        DetectedQuestion(question_id="Q2", text="What is gravity?", answer_text="Force that pulls objects down."),
+    svc.extract.return_value = [
+        QaSegment(sequential_id="Q1", raw_label="1.", question_text="What is photosynthesis?", answer_text="Plants use sunlight to make food.", start_page=0, end_page=0),
+        QaSegment(sequential_id="Q2", raw_label="2.", question_text="What is gravity?", answer_text="Force that pulls objects down.", start_page=0, end_page=0),
     ]
-    svc.extract_questions_only.return_value = [
-        {"question_id": "Q1", "question": "What is photosynthesis?"},
-        {"question_id": "Q2", "question": "What is gravity?"},
+    svc.extract_questions.return_value = [
+        {"sequential_id": "Q1", "question": "What is photosynthesis?"},
+        {"sequential_id": "Q2", "question": "What is gravity?"},
     ]
     return svc
 
@@ -84,7 +94,7 @@ def mock_result_store():
 @pytest.fixture
 def service(
     mock_pdf_service,
-    mock_question_service,
+    mock_qa_extractor,
     mock_llm_service,
     mock_assessment_service,
     mock_result_store,
@@ -92,7 +102,7 @@ def service(
 ):
     return EvaluationService(
         pdf_service=mock_pdf_service,
-        question_service=mock_question_service,
+        qa_extractor=mock_qa_extractor,
         llm_service=mock_llm_service,
         assessment_service=mock_assessment_service,
         result_store=mock_result_store,
@@ -117,7 +127,7 @@ class TestEvaluatePdf:
         pdf_path = str(tmp_path / "test.pdf")
         open(pdf_path, "w").close()
         service.evaluate(answer_file_path=pdf_path, file_type="pdf")
-        mock_pdf_service.extract_text.assert_called_once_with(pdf_path)
+        mock_pdf_service.extract_result.assert_called_once()
 
     def test_generates_llm_answers(self, service, mock_llm_service, tmp_path):
         pdf_path = str(tmp_path / "test.pdf")
@@ -135,22 +145,26 @@ class TestEvaluatePdf:
     def test_reuses_cached_model_answer_for_repeated_question_text(
         self,
         mock_pdf_service,
-        mock_question_service,
+        mock_qa_extractor,
         mock_assessment_service,
         mock_result_store,
         mock_ocr_fn,
         tmp_path,
     ):
-        mock_question_service.detect_questions.return_value = [
-            DetectedQuestion(
-                question_id="Q1",
-                text="What is gravity?",
+        mock_qa_extractor.extract.return_value = [
+            QaSegment(
+                sequential_id="Q1",
+                raw_label="1.",
+                question_text="What is gravity?",
                 answer_text="Force that pulls objects down.",
+                start_page=0, end_page=0,
             ),
-            DetectedQuestion(
-                question_id="Q2",
-                text="What is gravity?",
+            QaSegment(
+                sequential_id="Q2",
+                raw_label="2.",
+                question_text="What is gravity?",
                 answer_text="Gravity keeps planets in orbit.",
+                start_page=0, end_page=0,
             ),
         ]
 
@@ -160,6 +174,7 @@ class TestEvaluatePdf:
         openai_client.chat.completions.create.return_value = response
 
         with patch("services.llm_service.OpenAI", return_value=openai_client):
+            from services.llm_service import LlmService
             llm_service = LlmService(
                 api_key="test-key",
                 model="llama-3.3-70b-versatile",
@@ -170,7 +185,7 @@ class TestEvaluatePdf:
         try:
             service = EvaluationService(
                 pdf_service=mock_pdf_service,
-                question_service=mock_question_service,
+                qa_extractor=mock_qa_extractor,
                 llm_service=llm_service,
                 assessment_service=mock_assessment_service,
                 result_store=mock_result_store,
@@ -191,34 +206,35 @@ class TestEvaluatePdf:
 
 
 class TestEvaluateImage:
-    def test_uses_ocr_for_image(self, service, mock_ocr_fn, mock_question_service, tmp_path):
+    def test_uses_ocr_for_image(self, service, mock_ocr_fn, mock_qa_extractor, tmp_path):
         img_path = str(tmp_path / "test.jpg")
         open(img_path, "w").close()
-        # For images, question_service should still work on OCR text
-        mock_question_service.detect_questions.return_value = [
-            DetectedQuestion(
-                question_id="Q1",
-                text="What concept is being explained?",
+        mock_qa_extractor.extract.return_value = [
+            QaSegment(
+                sequential_id="Q1",
+                raw_label=None,
+                question_text="What concept is being explained?",
                 answer_text="OCR extracted answer text",
+                start_page=0, end_page=0,
             ),
         ]
         service.evaluate(answer_file_path=img_path, file_type="image")
         mock_ocr_fn.assert_called_once_with(img_path)
 
-    def test_raises_when_text_extraction_is_empty(self, service, mock_ocr_fn, mock_question_service, tmp_path):
+    def test_raises_when_text_extraction_is_empty(self, service, mock_ocr_fn, mock_qa_extractor, tmp_path):
         img_path = str(tmp_path / "test.jpg")
         open(img_path, "w").close()
         mock_ocr_fn.return_value = ""
-        mock_question_service.detect_questions.return_value = []
+        mock_qa_extractor.extract.return_value = []
 
         with pytest.raises(ValueError, match="Text extraction produced no readable content"):
             service.evaluate(answer_file_path=img_path, file_type="image")
 
-    def test_rejects_student_answer_as_reference_fallback(self, service, mock_question_service, tmp_path):
+    def test_rejects_student_answer_as_reference_fallback(self, service, mock_qa_extractor, tmp_path):
         img_path = str(tmp_path / "test.jpg")
         open(img_path, "w").close()
-        mock_question_service.detect_questions.return_value = [
-            DetectedQuestion(question_id="Q1", text="", answer_text="OCR extracted answer text"),
+        mock_qa_extractor.extract.return_value = [
+            QaSegment(sequential_id="Q1", raw_label=None, question_text="", answer_text="OCR extracted answer text", start_page=0, end_page=0),
         ]
 
         with pytest.raises(ValueError, match="authoritative question text"):
@@ -226,7 +242,7 @@ class TestEvaluateImage:
 
 
 class TestEvaluateWithQuestionPaper:
-    def test_uses_question_paper(self, service, mock_question_service, tmp_path):
+    def test_uses_question_paper(self, service, mock_qa_extractor, tmp_path):
         answer_path = str(tmp_path / "answers.pdf")
         question_path = str(tmp_path / "questions.pdf")
         open(answer_path, "w").close()
@@ -238,8 +254,8 @@ class TestEvaluateWithQuestionPaper:
             question_file_path=question_path,
             question_file_type="pdf",
         )
-        # Should extract questions from the question paper
-        mock_question_service.extract_questions_only.assert_called_once()
+        # extract_questions called for question paper extraction
+        mock_qa_extractor.extract_questions.assert_called_once()
 
     def test_raises_when_llm_is_unavailable_for_multi_question_grading(
         self, service, mock_llm_service, tmp_path
@@ -254,34 +270,38 @@ class TestEvaluateWithQuestionPaper:
     def test_matches_question_paper_entries_by_question_id_instead_of_position(
         self,
         mock_pdf_service,
-        mock_question_service,
+        mock_qa_extractor,
         mock_llm_service,
         mock_assessment_service,
         mock_result_store,
         mock_ocr_fn,
         tmp_path,
     ):
-        mock_question_service.detect_questions.return_value = [
-            DetectedQuestion(
-                question_id="Q1",
-                text="student detected q1",
+        mock_qa_extractor.extract.return_value = [
+            QaSegment(
+                sequential_id="Q1",
+                raw_label="1.",
+                question_text="student detected q1",
                 answer_text="answer 1",
+                start_page=0, end_page=0,
             ),
-            DetectedQuestion(
-                question_id="Q3",
-                text="student detected q3",
+            QaSegment(
+                sequential_id="Q3",
+                raw_label="3.",
+                question_text="student detected q3",
                 answer_text="answer 3",
+                start_page=0, end_page=0,
             ),
         ]
-        mock_question_service.extract_questions_only.return_value = [
-            {"question_id": "Q1", "question": "paper q1"},
-            {"question_id": "Q2", "question": "paper q2"},
-            {"question_id": "Q3", "question": "paper q3"},
+        mock_qa_extractor.extract_questions.return_value = [
+            {"sequential_id": "Q1", "question": "paper q1"},
+            {"sequential_id": "Q2", "question": "paper q2"},
+            {"sequential_id": "Q3", "question": "paper q3"},
         ]
 
         service = EvaluationService(
             pdf_service=mock_pdf_service,
-            question_service=mock_question_service,
+            qa_extractor=mock_qa_extractor,
             llm_service=mock_llm_service,
             assessment_service=mock_assessment_service,
             result_store=mock_result_store,
@@ -312,7 +332,6 @@ class TestAggregation:
         pdf_path = str(tmp_path / "test.pdf")
         open(pdf_path, "w").close()
         result = service.evaluate(answer_file_path=pdf_path, file_type="pdf")
-        # 2 questions × 7 marks each = 14
         assert result["total_score"] == 14.0
 
     def test_max_total_score_sums_max_marks(self, service, tmp_path):
@@ -330,7 +349,7 @@ class TestAggregation:
     def test_marks_assessment_exceptions_as_failed_without_f_grade(
         self,
         mock_pdf_service,
-        mock_question_service,
+        mock_qa_extractor,
         mock_llm_service,
         mock_result_store,
         mock_ocr_fn,
@@ -354,7 +373,7 @@ class TestAggregation:
 
         service = EvaluationService(
             pdf_service=mock_pdf_service,
-            question_service=mock_question_service,
+            qa_extractor=mock_qa_extractor,
             llm_service=mock_llm_service,
             assessment_service=mock_assessment_service,
             result_store=mock_result_store,

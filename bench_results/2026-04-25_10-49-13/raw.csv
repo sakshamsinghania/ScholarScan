@@ -1,0 +1,676 @@
+page_id,source_pdf,provider,repeat,latency_s,char_count,cer,wer,error
+handwritten_assignment_p001,handwritten_assignment.pdf,vision,2,1.1049,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+handwritten_assignment_p002,handwritten_assignment.pdf,vision,2,0.7982,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+handwritten_assignment_p003,handwritten_assignment.pdf,vision,2,0.5791,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+handwritten_assignment_p004,handwritten_assignment.pdf,vision,2,0.8673,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+handwritten_assignment_p005,handwritten_assignment.pdf,vision,2,0.8423,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+handwritten_assignment_p006,handwritten_assignment.pdf,vision,2,0.7878,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+handwritten_assignment_p007,handwritten_assignment.pdf,vision,2,0.7931,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+handwritten_assignment_p008,handwritten_assignment.pdf,vision,2,0.5310,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+minaz_p001,minaz.pdf,vision,2,2.2521,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+minaz_p002,minaz.pdf,vision,2,2.3813,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+minaz_p003,minaz.pdf,vision,2,2.2523,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+minaz_p004,minaz.pdf,vision,2,2.4308,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+minaz_p005,minaz.pdf,vision,2,2.0613,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+minaz_p006,minaz.pdf,vision,2,2.7355,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+satya_p001,satya.pdf,vision,2,1.1087,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+satya_p002,satya.pdf,vision,2,0.9934,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+satya_p003,satya.pdf,vision,2,1.0559,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+saksham_p001,saksham.pdf,vision,2,0.8071,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+saksham_p002,saksham.pdf,vision,2,1.3310,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+saksham_p003,saksham.pdf,vision,2,0.8218,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+saksham_p004,saksham.pdf,vision,2,0.9894,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+saksham_p005,saksham.pdf,vision,2,0.9035,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+zeeya_p001,zeeya.pdf,vision,2,1.5814,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+zeeya_p002,zeeya.pdf,vision,2,1.6397,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+zeeya_p003,zeeya.pdf,vision,2,1.5101,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+zeeya_p004,zeeya.pdf,vision,2,1.9528,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"
+zeeya_p005,zeeya.pdf,vision,2,1.2331,0,,,"403 This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: ""BILLING_DISABLED""
+domain: ""googleapis.com""
+metadata {
+  key: ""service""
+  value: ""vision.googleapis.com""
+}
+metadata {
+  key: ""containerInfo""
+  value: ""333308824934""
+}
+metadata {
+  key: ""consumer""
+  value: ""projects/333308824934""
+}
+metadata {
+  key: ""consoleUrl""
+  value: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+, locale: ""en-US""
+message: ""This API method requires billing to be enabled. Please enable billing on project #333308824934 by visiting https://console.developers.google.com/billing/enable?project=333308824934 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.""
+, links {
+  description: ""Google developers console billing""
+  url: ""https://console.developers.google.com/billing/enable?project=333308824934""
+}
+]"

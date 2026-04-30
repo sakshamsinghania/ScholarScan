@@ -115,10 +115,13 @@ const QuestionCard = ({ q, index }: { q: QuestionResult; index: number }) => {
               </p>
             </div>
           ) : (
-            <div className="flex justify-start gap-5 pt-4">
+            <div className="flex flex-wrap justify-start gap-5 pt-4">
               <ScoreRing score={q.similarity_score} label="Overall" size={72} />
-              <ScoreRing score={q.tfidf_score} label="Keyword" size={64} />
-              <ScoreRing score={q.sbert_score} label="Meaning" size={64} />
+              <ScoreRing score={q.sbert_score ?? 0} label="SBERT" size={56} />
+              <ScoreRing score={q.sentence_similarity ?? 0} label="Sentence" size={56} />
+              <ScoreRing score={q.concept_coverage ?? 0} label="Concept" size={56} />
+              <ScoreRing score={q.tfidf_score ?? 0} label="TF-IDF" size={56} />
+              <ScoreRing score={q.entailment_score ?? 0} label="NLI" size={56} />
             </div>
           )}
 
@@ -178,8 +181,11 @@ const SingleResultDisplay = ({ result }: { result: AssessmentResponse }) => (
       <div className="flex items-center justify-between">
         <div className="flex gap-5">
           <ScoreRing score={result.similarity_score} label="Overall" size={100} />
-          <ScoreRing score={result.tfidf_score} label="Keyword" size={80} />
-          <ScoreRing score={result.sbert_score} label="Meaning" size={80} />
+          <ScoreRing score={result.sbert_score ?? 0} label="SBERT" size={72} />
+          <ScoreRing score={result.sentence_similarity ?? 0} label="Sentence" size={72} />
+          <ScoreRing score={result.concept_coverage ?? 0} label="Concept" size={72} />
+          <ScoreRing score={result.tfidf_score ?? 0} label="TF-IDF" size={72} />
+          <ScoreRing score={result.entailment_score ?? 0} label="NLI" size={72} />
         </div>
         <div className="text-right space-y-2">
           <GradeBadge grade={result.grade} />

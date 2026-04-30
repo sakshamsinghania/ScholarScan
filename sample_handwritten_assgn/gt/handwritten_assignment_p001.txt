@@ -1,0 +1,21 @@
+Cybersecurity Activities
+
+CASE STUDY 1: Ransomware Attack on a Smart Hospital
+
+1. Detection Phase
+
+Early Indicators:
+• Sudden system lockouts across hospital devices
+• Patient data becomes inaccessible
+• Ransom message appears ("Pay 50 Bitcoin")
+• Malfunctioning IoT devices (ventilators, monitors)
+• Unusual network traffic or system slowdown
+
+Logs to Check:
+Network Logs:
+• Suspicious outgoing connections
+• Unknown IP communication
+
+Device Logs:
+• Unauthorized access attempts
+• Firmware irregularities

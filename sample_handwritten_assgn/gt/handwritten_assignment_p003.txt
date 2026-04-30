@@ -1,0 +1,20 @@
+Removal Steps:
+• Identify infected systems
+• Use anti-malware tools
+• Remove malicious files/processes
+• Patch vulnerabilities
+• Reinstall OS if needed
+
+4. Recovery
+• Restore from clean backups
+• Ensure backups are not infected
+• Gradually reconnect systems
+• Monitor for suspicious activity
+
+5. Forensics
+
+Evidence:
+• Network, system, firewall logs
+• Malware samples
+• Affected devices
+• Email records

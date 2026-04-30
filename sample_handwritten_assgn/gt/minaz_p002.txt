@@ -1,0 +1,30 @@
+=> Advantages:
+• No server management - handled by providers like Amazon Web Services or google cloud.
+• Auto-scaling: Scales based on demand.
+• Cost-efficient: Pay only for execution time.
+• Faster development: focus on business logic
+• High availability: Built-in fault tolerance
+
+Limitations:
+• Cold start latency
+• Execution time limits
+• Vendor lock-in
+• Limited control over infrastructure
+• Debugging complexity
+
+Ques.3: Explain how google BigQuery handles large-scale analytics efficiently?
+
+=> google Big Query is designed for massive data analytics.
+
+Key features:
+
+1) Columnar storage
+• Stores data column wise -> faster queries
+
+2) Distributed processing
+• Uses parallel execution model for fast aggregation.
+
+3) Dremel engine
+• Tree based execution model for fast aggregation.
+
+4) Serverless architecture

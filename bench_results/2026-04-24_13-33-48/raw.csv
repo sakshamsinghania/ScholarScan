@@ -1,0 +1,109 @@
+page_id,source_pdf,provider,repeat,latency_s,char_count,cer,wer,error
+handwritten_assignment_p001,handwritten_assignment.pdf,mistral,2,1.7764,506,,,
+handwritten_assignment_p001,handwritten_assignment.pdf,vision,2,0.2227,0,,,Google Vision client not available
+handwritten_assignment_p001,handwritten_assignment.pdf,tesseract,2,1.0219,368,,,
+handwritten_assignment_p001,handwritten_assignment.pdf,cascade,2,2.5295,506,,,
+handwritten_assignment_p002,handwritten_assignment.pdf,mistral,2,12.6971,492,,,
+handwritten_assignment_p002,handwritten_assignment.pdf,vision,2,0.2284,0,,,Google Vision client not available
+handwritten_assignment_p002,handwritten_assignment.pdf,tesseract,2,0.8543,172,,,
+handwritten_assignment_p002,handwritten_assignment.pdf,cascade,2,1.7130,492,,,
+handwritten_assignment_p003,handwritten_assignment.pdf,mistral,2,1.7004,413,,,
+handwritten_assignment_p003,handwritten_assignment.pdf,vision,2,0.2054,0,,,Google Vision client not available
+handwritten_assignment_p003,handwritten_assignment.pdf,tesseract,2,0.8674,347,,,
+handwritten_assignment_p003,handwritten_assignment.pdf,cascade,2,1.8321,413,,,
+handwritten_assignment_p004,handwritten_assignment.pdf,mistral,2,6.6687,390,,,
+handwritten_assignment_p004,handwritten_assignment.pdf,vision,2,0.2291,0,,,Google Vision client not available
+handwritten_assignment_p004,handwritten_assignment.pdf,tesseract,2,0.8560,221,,,
+handwritten_assignment_p004,handwritten_assignment.pdf,cascade,2,1.7500,390,,,
+handwritten_assignment_p005,handwritten_assignment.pdf,mistral,2,1.8959,461,,,
+handwritten_assignment_p005,handwritten_assignment.pdf,vision,2,0.2272,0,,,Google Vision client not available
+handwritten_assignment_p005,handwritten_assignment.pdf,tesseract,2,0.8982,297,,,
+handwritten_assignment_p005,handwritten_assignment.pdf,cascade,2,1.7842,461,,,
+handwritten_assignment_p006,handwritten_assignment.pdf,mistral,2,2.4379,395,,,
+handwritten_assignment_p006,handwritten_assignment.pdf,vision,2,0.2179,0,,,Google Vision client not available
+handwritten_assignment_p006,handwritten_assignment.pdf,tesseract,2,0.7660,189,,,
+handwritten_assignment_p006,handwritten_assignment.pdf,cascade,2,1.8567,395,,,
+handwritten_assignment_p007,handwritten_assignment.pdf,mistral,2,4.5614,486,,,
+handwritten_assignment_p007,handwritten_assignment.pdf,vision,2,0.2216,0,,,Google Vision client not available
+handwritten_assignment_p007,handwritten_assignment.pdf,tesseract,2,0.9071,235,,,
+handwritten_assignment_p007,handwritten_assignment.pdf,cascade,2,1.6943,486,,,
+handwritten_assignment_p008,handwritten_assignment.pdf,mistral,2,1.9803,215,,,
+handwritten_assignment_p008,handwritten_assignment.pdf,vision,2,0.1800,0,,,Google Vision client not available
+handwritten_assignment_p008,handwritten_assignment.pdf,tesseract,2,0.8294,228,,,
+handwritten_assignment_p008,handwritten_assignment.pdf,cascade,2,1.6161,215,,,
+minaz_p001,minaz.pdf,mistral,2,3.1185,821,,,
+minaz_p001,minaz.pdf,vision,2,0.3701,0,,,Google Vision client not available
+minaz_p001,minaz.pdf,tesseract,2,8.9898,6981,,,
+minaz_p001,minaz.pdf,cascade,2,4.7413,821,,,
+minaz_p002,minaz.pdf,mistral,2,2.8329,862,,,
+minaz_p002,minaz.pdf,vision,2,0.3986,0,,,Google Vision client not available
+minaz_p002,minaz.pdf,tesseract,2,12.8094,10072,,,
+minaz_p002,minaz.pdf,cascade,2,2.9326,862,,,
+minaz_p003,minaz.pdf,mistral,2,2.7278,966,,,
+minaz_p003,minaz.pdf,vision,2,0.3925,0,,,Google Vision client not available
+minaz_p003,minaz.pdf,tesseract,2,17.8144,13123,,,
+minaz_p003,minaz.pdf,cascade,2,2.8490,966,,,
+minaz_p004,minaz.pdf,mistral,2,2.4713,705,,,
+minaz_p004,minaz.pdf,vision,2,0.4010,0,,,Google Vision client not available
+minaz_p004,minaz.pdf,tesseract,2,12.2677,8947,,,
+minaz_p004,minaz.pdf,cascade,2,2.7321,705,,,
+minaz_p005,minaz.pdf,mistral,2,2.7718,702,,,
+minaz_p005,minaz.pdf,vision,2,0.3744,0,,,Google Vision client not available
+minaz_p005,minaz.pdf,tesseract,2,12.0512,8503,,,
+minaz_p005,minaz.pdf,cascade,2,2.8170,702,,,
+minaz_p006,minaz.pdf,mistral,2,2.1984,202,,,
+minaz_p006,minaz.pdf,vision,2,0.3758,0,,,Google Vision client not available
+minaz_p006,minaz.pdf,tesseract,2,22.1766,16559,,,
+minaz_p006,minaz.pdf,cascade,2,2.7047,202,,,
+satya_p001,satya.pdf,mistral,2,2.7873,1248,,,
+satya_p001,satya.pdf,vision,2,0.2916,0,,,Google Vision client not available
+satya_p001,satya.pdf,tesseract,2,3.0979,1664,,,
+satya_p001,satya.pdf,cascade,2,3.4470,1248,,,
+satya_p002,satya.pdf,mistral,2,12.1316,939,,,
+satya_p002,satya.pdf,vision,2,0.2850,0,,,Google Vision client not available
+satya_p002,satya.pdf,tesseract,2,3.5858,2323,,,
+satya_p002,satya.pdf,cascade,2,4.2646,939,,,
+satya_p003,satya.pdf,mistral,2,2.5363,710,,,
+satya_p003,satya.pdf,vision,2,0.2561,0,,,Google Vision client not available
+satya_p003,satya.pdf,tesseract,2,1.4844,642,,,
+satya_p003,satya.pdf,cascade,2,2.1485,710,,,
+saksham_p001,saksham.pdf,mistral,2,7.0293,969,,,
+saksham_p001,saksham.pdf,vision,2,0.2411,0,,,Google Vision client not available
+saksham_p001,saksham.pdf,tesseract,2,2.2600,1272,,,
+saksham_p001,saksham.pdf,cascade,2,3.9493,969,,,
+saksham_p002,saksham.pdf,mistral,2,2.2411,999,,,
+saksham_p002,saksham.pdf,vision,2,0.2606,0,,,Google Vision client not available
+saksham_p002,saksham.pdf,tesseract,2,2.1312,1117,,,
+saksham_p002,saksham.pdf,cascade,2,17.0166,999,,,
+saksham_p003,saksham.pdf,mistral,2,3.0291,1079,,,
+saksham_p003,saksham.pdf,vision,2,0.2455,0,,,Google Vision client not available
+saksham_p003,saksham.pdf,tesseract,2,2.0364,1095,,,
+saksham_p003,saksham.pdf,cascade,2,3.6374,1079,,,
+saksham_p004,saksham.pdf,mistral,2,2.3568,851,,,
+saksham_p004,saksham.pdf,vision,2,0.2581,0,,,Google Vision client not available
+saksham_p004,saksham.pdf,tesseract,2,1.9098,1027,,,
+saksham_p004,saksham.pdf,cascade,2,2.0780,851,,,
+saksham_p005,saksham.pdf,mistral,2,2.2521,694,,,
+saksham_p005,saksham.pdf,vision,2,0.2148,0,,,Google Vision client not available
+saksham_p005,saksham.pdf,tesseract,2,0.7310,176,,,
+saksham_p005,saksham.pdf,cascade,2,2.3851,694,,,
+zeeya_p001,zeeya.pdf,mistral,2,2.6920,1024,,,
+zeeya_p001,zeeya.pdf,vision,2,0.3517,0,,,Google Vision client not available
+zeeya_p001,zeeya.pdf,tesseract,2,7.4853,5232,,,
+zeeya_p001,zeeya.pdf,cascade,2,3.1820,1015,,,
+zeeya_p002,zeeya.pdf,mistral,2,2.7654,1010,,,
+zeeya_p002,zeeya.pdf,vision,2,0.3791,0,,,Google Vision client not available
+zeeya_p002,zeeya.pdf,tesseract,2,19.3488,10217,,,
+zeeya_p002,zeeya.pdf,cascade,2,2.6946,1010,,,
+zeeya_p003,zeeya.pdf,mistral,2,4.2971,979,,,
+zeeya_p003,zeeya.pdf,vision,2,0.3509,0,,,Google Vision client not available
+zeeya_p003,zeeya.pdf,tesseract,2,12.1504,8773,,,
+zeeya_p003,zeeya.pdf,cascade,2,2.9180,979,,,
+zeeya_p004,zeeya.pdf,mistral,2,4.2195,954,,,
+zeeya_p004,zeeya.pdf,vision,2,0.3803,0,,,Google Vision client not available
+zeeya_p004,zeeya.pdf,tesseract,2,20.0267,13938,,,
+zeeya_p004,zeeya.pdf,cascade,2,3.1956,954,,,
+zeeya_p005,zeeya.pdf,mistral,2,2.6610,796,,,
+zeeya_p005,zeeya.pdf,vision,2,0.3072,0,,,Google Vision client not available
+zeeya_p005,zeeya.pdf,tesseract,2,6.9434,3768,,,
+zeeya_p005,zeeya.pdf,cascade,2,3.5984,792,,,

@@ -1,0 +1,22 @@
+Firewall Alerts:
+• Blocked suspicious traffic
+• Repeated intrusion attempts
+
+2. Containment
+
+Actions:
+• Disconnect infected IoT devices from network
+• Avoid shutting down all systems (critical care must continue)
+• Shut down only if absolutely necessary
+
+Immediate Steps:
+• Isolate infected systems (network segmentation)
+• Disable remote access
+• Block malicious IPs
+• Inform incident response team
+
+3. Eradication
+
+Possible Sources:
+• Phishing email
+• Unpatched IoT firmware

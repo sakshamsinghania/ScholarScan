@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 from typing import Any, Callable
 
+from core.similarity import TieredReference
 from services.result_storage_service import ResultStorageService
 
 
@@ -23,10 +24,12 @@ class AssessmentService:
         score_answer_fn: Callable,
         sbert_model: Any,
         result_store: ResultStorageService,
+        preprocess_markdown_for_sbert_fn: Callable | None = None,
     ):
         self._extract_text = extract_text_fn
         self._preprocess_for_tfidf = preprocess_for_tfidf_fn
         self._preprocess_for_sbert = preprocess_for_sbert_fn
+        self._preprocess_markdown_for_sbert = preprocess_markdown_for_sbert_fn
         self._compute_similarity = compute_similarity_fn
         self._score_answer = score_answer_fn
         self._sbert_model = sbert_model
@@ -40,6 +43,8 @@ class AssessmentService:
         student_id: str = "anonymous",
         max_marks: int = 10,
         pre_extracted_text: str | None = None,
+        source: str = "manual",
+        tiered_reference: TieredReference | None = None,
     ) -> dict:
         """
         Run the full assessment pipeline for a single student answer.
@@ -65,9 +70,14 @@ class AssessmentService:
 
         # Step 2: NLP preprocessing (two modes)
         student_tfidf = self._preprocess_for_tfidf(raw_text)
-        student_sbert = self._preprocess_for_sbert(raw_text)
         model_tfidf = self._preprocess_for_tfidf(model_answer)
-        model_sbert = self._preprocess_for_sbert(model_answer)
+
+        if source == "mistral" and self._preprocess_markdown_for_sbert:
+            student_sbert = self._preprocess_markdown_for_sbert(raw_text)
+            model_sbert = self._preprocess_markdown_for_sbert(model_answer)
+        else:
+            student_sbert = self._preprocess_for_sbert(raw_text)
+            model_sbert = self._preprocess_for_sbert(model_answer)
 
         # Step 3: Similarity computation
         sim_result = self._compute_similarity(
@@ -76,6 +86,7 @@ class AssessmentService:
             student_sbert=student_sbert,
             model_sbert=model_sbert,
             sbert_model=self._sbert_model,
+            tiered_reference=tiered_reference,
         )
 
         # Step 4: Scoring
@@ -90,6 +101,9 @@ class AssessmentService:
 
         # Step 5: Build response
         response = self._build_response(assessment)
+        response["sentence_similarity"] = sim_result.get("sentence_similarity", 0.0)
+        response["concept_coverage"] = sim_result.get("concept_coverage", 0.0)
+        response["entailment_score"] = sim_result.get("entailment_score")
 
         # Step 6: Store result
         stored = {**response, "question_id": question_id, "student_id": student_id}

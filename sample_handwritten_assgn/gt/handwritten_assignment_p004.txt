@@ -1,0 +1,23 @@
+Chain of Custody:
+• Ensures legal validity of evidence
+• Prevents tampering
+• Maintains integrity
+
+Hands-on Task
+
+Nmap:
+• Used to scan open ports
+• Helps identify vulnerabilities
+
+Possible Entry Points:
+• Open ports (e.g., SSH, RDP)
+• Weak authentication
+• Unpatched systems
+• Phishing attack
+
+Questions
+
+1. Should ransom be paid?
+No:
+• No guarantee of data recovery
+• Encourages cybercrime

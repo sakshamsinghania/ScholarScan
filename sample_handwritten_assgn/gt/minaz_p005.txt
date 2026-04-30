@@ -1,0 +1,29 @@
+4) CI/CD integration
+• Used with tools like Jenkins or github Actions
+
+5) Automated deployments
+• Enables repeatable and consistent deployments
+
+6) Rollback capability
+• Easy recovery from failures
+
+Ques.7: Explain the working of edge inference with a step-by-step process?
+
+=> Edge inference means running AI models locally on devices instead of cloud.
+
+Step-by-step process:
+
+1) Model training
+• Model is trained in cloud (eg using GPUs)
+
+2) Model optimization
+• Compression, quantization for smaller size
+
+3) Deployment to edge device
+• Devices like smartphone, IoT devices
+
+4) Data collection
+• Real-time data from sensors/cameras
+
+5) Local inference
+• Model processes data on device

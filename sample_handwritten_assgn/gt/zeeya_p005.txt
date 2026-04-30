@@ -1,0 +1,16 @@
+Date ..............
+
+7. Explain the working of edge inference with a step-by-step process.
+
+Ans →
+1. Train – full model trained on cloud GPU
+2. Optimize – quantization (FP32 → INT8), pruning, knowledge distillation
+3. Convert – export to edge format: TF Lite, ONNX, Core ML, TensorRT
+4. Deploy – model pushed to device via OTA update or flashing
+5. Capture – sensors collect raw data (camera frames, audio, IMU)
+6. Preprocess – resize, normalize, extract features on-device CPU/DSP
+7. Infer – model forward pass runs on NPU/GPU/DSP locally
+8. Postprocess – raw outputs → labels, bounding boxes, anomaly scores → action
+9. Telemetry – only metadata/results sent to cloud; raw data never leaves device
+
+Key benefit: No network round trip → sub-millisecond latency; offline capability; data privacy.

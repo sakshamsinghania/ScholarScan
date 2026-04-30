@@ -1,0 +1,10 @@
+6) Decision making
+• Immediate response (eg object detection)
+
+7) Optional cloud sync
+• Send results or updates to cloud
+
+Advantages
+• Low latency
+• Improved privacy
+• Reduced bandwidth usage
