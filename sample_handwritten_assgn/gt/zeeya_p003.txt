@@ -1,0 +1,27 @@
+Date ..............
+
+4. Compare:
+• Pre-built ML APIs
+• AutoML
+• Custom ML models
+
+Ans →
+
+                Pre-built APIs      AutoML           Custom Models
+Skill needed    None                Low              High
+Data needed     None                Hundreds–thousand Millions
+Customization   None                Moderate         Full
+Time to deploy  Minutes             Hours–days       Weeks–months
+Best for        Generic tasks       Domain-specific  Novel/research
+Example         Vision API,         AutoML Tables    TensorFlow
+                Translate
+
+5. Explain the complete lifecycle of a serverless function, including trigger, execution and scaling.
+
+Ans →
+1. Deploy – upload code, set runtime, memory, timeout
+2. Register trigger – HTTP, queue event, storage event, cron
+3. Trigger fires – invocation event received by platform
+4. Cold/warm start – new container initialized (cold) or existing reused (warm)
+5. Execute – handler runs with event payload, accesses external services
+6. Return response – result sent back to caller

@@ -23,7 +23,6 @@ class Config:
     )
     GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
     GROQ_BASE_URL = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
     LLM_MODEL = os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")
     LLM_MIN_INTERVAL_SECONDS = float(os.getenv("LLM_MIN_INTERVAL_SECONDS", "2"))
     LLM_DAILY_REQUEST_LIMIT = int(os.getenv("LLM_DAILY_REQUEST_LIMIT", "14000"))
@@ -60,3 +59,33 @@ class Config:
     # Unset / false → existing threading fallback (safe for local dev and tests).
     USE_CELERY = os.getenv("USE_CELERY", "false").lower() == "true"
     REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+
+    # --- OCR cascade (Phase 8) ---
+    OCR_CASCADE = os.getenv("OCR_CASCADE", "mistral,vision,tesseract")
+    MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "")
+    MISTRAL_OCR_MODEL = os.getenv("MISTRAL_OCR_MODEL", "mistral-ocr-latest")
+    GOOGLE_VISION_API_KEY = os.getenv("GOOGLE_VISION_API_KEY", "")
+    GOOGLE_CREDENTIALS_PATH = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
+    OCR_PROVIDER_TIMEOUT_SECONDS = int(os.getenv("OCR_PROVIDER_TIMEOUT_SECONDS", "60"))
+    OCR_TOTAL_TIMEOUT_SECONDS = int(os.getenv("OCR_TOTAL_TIMEOUT_SECONDS", "120"))
+    OCR_RETRIES_PER_PROVIDER = int(os.getenv("OCR_RETRIES_PER_PROVIDER", "2"))
+
+    # --- NLP scoring upgrade (Phase 10) ---
+    SCORING_V2_ENABLED = os.getenv("SCORING_V2_ENABLED", "true").lower() == "true"
+    SENTENCE_SIM_ENABLED = os.getenv("SENTENCE_SIM_ENABLED", "true").lower() == "true"
+    NLI_ENABLED = os.getenv("NLI_ENABLED", "false").lower() == "true"
+    NLI_MODEL_NAME = os.getenv("NLI_MODEL_NAME", "cross-encoder/nli-deberta-v3-base")
+    NLI_TOP_N = int(os.getenv("NLI_TOP_N", "16"))
+    NLI_TIMEOUT_MS = int(os.getenv("NLI_TIMEOUT_MS", "4000"))
+
+    # Scoring weights (V2 formula)
+    SCORE_WEIGHT_SBERT = float(os.getenv("SCORE_WEIGHT_SBERT", "0.35"))
+    SCORE_WEIGHT_SENTENCE = float(os.getenv("SCORE_WEIGHT_SENTENCE", "0.25"))
+    SCORE_WEIGHT_CONCEPT = float(os.getenv("SCORE_WEIGHT_CONCEPT", "0.25"))
+    SCORE_WEIGHT_TFIDF = float(os.getenv("SCORE_WEIGHT_TFIDF", "0.10"))
+    SCORE_WEIGHT_NLI = float(os.getenv("SCORE_WEIGHT_NLI", "0.05"))
+
+    # --- Tiered reference scoring (Phase 11) ---
+    TIERED_REFERENCE_ENABLED = os.getenv("TIERED_REFERENCE_ENABLED", "false").lower() == "true"
+    SUPPORTING_BONUS_CAP = float(os.getenv("SUPPORTING_BONUS_CAP", "0.15"))
+    TIERED_LLM_MAX_RETRIES = int(os.getenv("TIERED_LLM_MAX_RETRIES", "2"))

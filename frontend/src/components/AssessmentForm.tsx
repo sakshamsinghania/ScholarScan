@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Upload, FileImage, FileText, X, Send, Loader2, Sparkles, ChevronDown } from 'lucide-react'
+import { Upload, FileImage, FileText, X, Send, Loader2, Sparkles, ChevronDown, Timer } from 'lucide-react'
 import type { AnyAssessmentResult } from '../types/assessment'
-import { assessmentApi, getUserFacingErrorMessage, isTaskStart, validateFile } from '../api/assessment-api'
+import { assessmentApi, getUserFacingErrorMessage, isTaskStart, isRateLimitError, validateFile, type ApiError } from '../api/assessment-api'
+import { addToast } from '../hooks/useToast'
 
 interface Props {
   onResult: (result: AnyAssessmentResult) => void
@@ -20,8 +21,10 @@ export const AssessmentForm = ({ onResult, onTaskStarted, onError }: Props) => {
   const [dragOver, setDragOver] = useState(false)
   const [useAutoModel, setUseAutoModel] = useState(false)
   const [showOptions, setShowOptions] = useState(false)
+  const [cooldownSec, setCooldownSec] = useState(0)
   const answerFileRef = useRef<HTMLInputElement>(null)
   const questionFileRef = useRef<HTMLInputElement>(null)
+  const cooldownRef = useRef<number>(0)
 
   const isPdf = answerFile?.name.toLowerCase().endsWith('.pdf')
 
@@ -37,6 +40,21 @@ export const AssessmentForm = ({ onResult, onTaskStarted, onError }: Props) => {
     setQuestionFile(null)
     if (questionFileRef.current) questionFileRef.current.value = ''
   }, [questionFile, useAutoModel])
+
+  // Cooldown timer
+  useEffect(() => {
+    if (cooldownSec <= 0) return
+    cooldownRef.current = window.setInterval(() => {
+      setCooldownSec((prev) => {
+        if (prev <= 1) {
+          clearInterval(cooldownRef.current)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(cooldownRef.current)
+  }, [cooldownSec])
 
   const handleFile = useCallback((file: File) => {
     const error = validateFile(file)
@@ -93,7 +111,7 @@ export const AssessmentForm = ({ onResult, onTaskStarted, onError }: Props) => {
     if (questionFileRef.current) questionFileRef.current.value = ''
   }
 
-  const canSubmit = answerFile && (!useAutoModel ? modelAnswer.trim() : true) && !loading
+  const canSubmit = answerFile && (!useAutoModel ? modelAnswer.trim() : true) && !loading && cooldownSec === 0
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -129,6 +147,12 @@ export const AssessmentForm = ({ onResult, onTaskStarted, onError }: Props) => {
         }
       }
     } catch (err) {
+      if (isRateLimitError(err)) {
+        const apiErr = err as ApiError
+        const retryAfter = apiErr.retryAfterSec || 60
+        setCooldownSec(retryAfter)
+        addToast(`Rate limited — try again in ${retryAfter}s`, 'warning', retryAfter * 1000)
+      }
       onError(getUserFacingErrorMessage(err))
     } finally {
       setLoading(false)
@@ -360,7 +384,12 @@ export const AssessmentForm = ({ onResult, onTaskStarted, onError }: Props) => {
         disabled={!canSubmit}
         className="btn-primary w-full flex items-center justify-center gap-2"
       >
-        {loading ? (
+        {cooldownSec > 0 ? (
+          <>
+            <Timer size={16} />
+            Rate limited — {cooldownSec}s
+          </>
+        ) : loading ? (
           <>
             <Loader2 size={16} className="animate-spin" />
             Analyzing…

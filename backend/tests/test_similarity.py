@@ -32,11 +32,33 @@ class TestSBERTSimilarityFallback:
         assert model.is_available is True
         assert loaded_paths == [str(Path(modules_path).parent)]
 
+    def test_bootstraps_model_from_hub_when_cache_is_missing(self, monkeypatch):
+        load_calls: list[str] = []
+
+        def cache_lookup(model_name: str, filename: str):
+            return None
+
+        class DummySentenceTransformer:
+            def __init__(self, model_path: str):
+                load_calls.append(model_path)
+
+        monkeypatch.setattr("core.similarity.try_to_load_from_cache", cache_lookup)
+        monkeypatch.setattr("core.similarity.SentenceTransformer", DummySentenceTransformer)
+
+        model = SBERTSimilarity("all-MiniLM-L6-v2")
+
+        assert model.is_available is True
+        assert load_calls == ["all-MiniLM-L6-v2"]
+
     def test_marks_model_unavailable_when_local_load_fails(self, monkeypatch):
         def raise_missing_model(*args, **kwargs):
             raise OSError("model not cached")
 
+        def raise_bootstrap_failure(*args, **kwargs):
+            raise OSError("download failed")
+
         monkeypatch.setattr("core.similarity.try_to_load_from_cache", raise_missing_model)
+        monkeypatch.setattr("core.similarity.SentenceTransformer", raise_bootstrap_failure)
 
         model = SBERTSimilarity("all-MiniLM-L6-v2")
 

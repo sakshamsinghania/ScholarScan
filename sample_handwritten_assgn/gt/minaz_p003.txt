@@ -1,0 +1,29 @@
+• No infrastructure management required
+
+5) Separation of storage and compute
+• Independent scaling
+
+6) Query optimization
+• Automatic optimization of execution plans
+
+7) Built-in ML (Big Query ML)
+• Run ML directly on data without exporting
+
+Ques.4: Compare:
+• Pre-built ML APIs
+• AutoML
+• Custom ML models
+
+=> Feature        Pre-built ML APIs      Auto ML        Custom ML models
+Definition       Ready made APIs        Semi-automated ML    Fully custom built
+Skill req.       Low                    Medium               High
+Flexibility      Low                    Medium               High
+Use case         Generic tasks          Domain-specific tuning    Complex problems
+Examples         Vision API, NLP API    Auto ML Vision        Tensor flow models
+Dev time         Very fast              Moderate             Long
+
+Ques.5: Explain the complete lifecycle of a serverless function, including trigger, execution and scaling?
+
+=> 1) Trigger phase
+• Event occurs (HTTP request, file upload, database change)
+• Function is invoked

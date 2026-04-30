@@ -1,0 +1,20 @@
+Date ..............
+
+7. Auto-scale – concurrent events spawn parallel instances automatically
+8. Idle/teardown – container frozen or killed after inactivity; billing stops
+
+6. Discuss the role of Helm in DevOps and CI/CD pipelines.
+
+Ans → Core roles:
+• Templating – single chart deploys to dev/staging/prod via different values.yaml
+• Release tracking – every deploy is a versioned revision; Helm rollback reverts instantly
+• Dependency management – declares all app dependencies in chart.yaml
+
+CI/CD pipeline flow:
+1. Code push → Docker image built and pushed to registry
+2. helm package → chart pushed to Helm repo
+3. helm upgrade --install with environment-specific values file
+4. helm test runs in-cluster smoke tests
+5. On failure: helm rollback restores previous revision automatically
+
+GitOps: Tools like ArgoCD/Flux watch Git for chart changes and auto-sync the cluster, making Helm charts the deployment artifact and Git the source of truth.

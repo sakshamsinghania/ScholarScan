@@ -1,0 +1,32 @@
+2) Initialization (cold start)
+• Runtime environment is created
+• Dependencies are loaded
+
+3) Execution
+• Func code runs
+• Processes input and generates output
+
+4) Response
+• Output returned to caller or stored
+
+5) Scaling
+• Automatically scales based on incoming requests
+• Multiple instances run in parallel.
+
+6) Termination
+• Idle instances are shut down to save cost
+
+Ques.6: Discuss the role of helm in DevOps and CI/CD pipelines?
+
+=> Helm plays a crucial role in automation.
+
+Key roles:
+
+1) Application packaging
+• Standardizes deployment artifacts
+
+2) Environment management
+• Different configs via values.yaml (dev, staging, prod)
+
+3) Version control
+• Manage app versions and rollbacks.

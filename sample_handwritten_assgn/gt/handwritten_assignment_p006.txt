@@ -1,0 +1,23 @@
+• Lack of monitoring
+
+2. Incident Response Lifecycle
+
+Detection:
+• Data found on dark web
+• Security alerts
+• Suspicious access logs
+
+Containment:
+• Disable public access
+• Restrict permissions
+• Block unauthorized users
+
+Eradication:
+• Fix configurations
+• Strengthen access control
+• Patch vulnerabilities
+
+Recovery:
+• Notify users
+• Reset passwords
+• Restore secure systems

@@ -49,6 +49,15 @@ def init_db(database_url: str) -> bool:
         return False
 
 
+def reset_db() -> None:
+    """Dispose the active engine/session factory."""
+    global _engine, _SessionFactory
+    if _engine is not None:
+        _engine.dispose()
+    _engine = None
+    _SessionFactory = None
+
+
 def is_db_available() -> bool:
     return _SessionFactory is not None
 

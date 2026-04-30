@@ -7,8 +7,9 @@ from unittest.mock import MagicMock, patch, call
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+from adapters.ocr.base import OcrPage, OcrResult
 from services.evaluation_service import EvaluationService
-from services.question_service import QuestionService
+from services.qa_extractor import QaExtractor
 
 
 def _make_service(mock_extract=None):
@@ -27,9 +28,17 @@ def _make_service(mock_extract=None):
         "feedback": "Good.",
     }
 
+    mock_pdf = MagicMock()
+    mock_pdf.extract_result.return_value = OcrResult(
+        text="Q1. What is AI?\nAI answer",
+        confidence=0.9,
+        provider="mock",
+        page_data=(OcrPage(index=0, markdown="Q1. What is AI?\nAI answer"),),
+    )
+
     return EvaluationService(
-        pdf_service=MagicMock(extract_text=MagicMock(return_value="Q1. What is AI?\nAI answer")),
-        question_service=QuestionService(),
+        pdf_service=mock_pdf,
+        qa_extractor=QaExtractor(),
         llm_service=MagicMock(
             generate_model_answer=MagicMock(return_value="AI is a field of computer science.")
         ),
@@ -53,7 +62,6 @@ class TestProgressCallback:
             on_progress=on_progress,
         )
 
-        # Should have called progress at key stages
         assert "upload_received" in progress_calls
         assert "file_type_detection" in progress_calls
         assert "text_extraction" in progress_calls
@@ -66,7 +74,6 @@ class TestProgressCallback:
     def test_callback_none_is_safe(self):
         svc = _make_service()
 
-        # Should not raise when on_progress is None (default)
         result = svc.evaluate(
             answer_file_path="/fake/image.jpg",
             file_type="image",
@@ -86,7 +93,6 @@ class TestProgressCallback:
             on_progress=on_progress,
         )
 
-        # text_extraction stage should include character count
         assert "character" in messages.get("text_extraction", "").lower() or len(messages.get("text_extraction", "")) > 0
 
     def test_pdf_pipeline_enters_text_extraction_before_pdf_work_starts(self):
@@ -96,15 +102,20 @@ class TestProgressCallback:
         def on_progress(stage: str, message: str = ""):
             seen_stages.append(stage)
 
-        def extract_text_side_effect(*args, **kwargs):
+        def extract_result_side_effect(*args, **kwargs):
             assert seen_stages[-1] == "text_extraction"
-            return "Q1. What is AI?\nArtificial Intelligence is..."
+            return OcrResult(
+                text="Q1. What is AI?\nArtificial Intelligence is...",
+                confidence=0.9,
+                provider="mock",
+                page_data=(OcrPage(index=0, markdown="Q1. What is AI?\nArtificial Intelligence is..."),),
+            )
 
-        pdf_service.extract_text.side_effect = extract_text_side_effect
+        pdf_service.extract_result.side_effect = extract_result_side_effect
 
         svc = EvaluationService(
             pdf_service=pdf_service,
-            question_service=QuestionService(),
+            qa_extractor=QaExtractor(),
             llm_service=MagicMock(
                 generate_model_answer=MagicMock(return_value="AI is a field of computer science.")
             ),

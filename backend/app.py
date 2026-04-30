@@ -13,7 +13,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 from config import Config
-from db.session import init_db, create_all_tables
+from db.session import init_db, create_all_tables, reset_db
 from services.result_storage_service import ResultStorageService
 from services.progress_service import ProgressService
 from services.user_service import UserService
@@ -99,11 +99,18 @@ def get_current_user_id() -> str | None:
 def _configure_runtime_capabilities(app: Flask, testing: bool) -> None:
     """Record coarse capability flags for health reporting."""
     tesseract_available = shutil.which("tesseract") is not None
-    vision_credentials_configured = bool(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
+    vision_credentials_configured = bool(
+        app.config.get("GOOGLE_VISION_API_KEY")
+        or os.getenv("GOOGLE_VISION_API_KEY")
+        or app.config.get("GOOGLE_CREDENTIALS_PATH")
+        or os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    )
+    mistral_configured = bool(app.config.get("MISTRAL_API_KEY"))
 
     app.config["TESSERACT_AVAILABLE"] = tesseract_available
     app.config["VISION_CREDENTIALS_CONFIGURED"] = vision_credentials_configured
-    app.config["OCR_AVAILABLE"] = testing or tesseract_available or vision_credentials_configured
+    app.config["MISTRAL_CONFIGURED"] = mistral_configured
+    app.config["OCR_AVAILABLE"] = testing or tesseract_available or vision_credentials_configured or mistral_configured
     app.config["PDF_SUPPORT"] = True
 
 
@@ -142,6 +149,10 @@ def create_app(testing: bool = False) -> Flask:
         db_ok = init_db(app.config["DATABASE_URL"])
         if db_ok:
             create_all_tables()
+        else:
+            reset_db()
+    else:
+        reset_db()
 
     # Phase 3: bind Celery to this app when USE_CELERY is enabled
     if app.config.get("USE_CELERY"):
@@ -203,45 +214,54 @@ def create_app(testing: bool = False) -> Flask:
 
 def _register_real_services(app: Flask, result_store: ResultStorageService) -> None:
     """Wire up real core modules — loads ML models."""
-    from core.ocr_google_vision import extract_text
-    from core.nlp import preprocess_for_tfidf, preprocess_for_sbert
+    from core.nlp import preprocess_for_tfidf, preprocess_for_sbert, preprocess_markdown_for_sbert
     from core.similarity import SBERTSimilarity, compute_similarity
     from core.scoring import score_answer
 
     from file_handling.file_handler import FileHandler
     from services.assessment_service import AssessmentService
+    from services.ocr_service import OcrService
     from services.pdf_service import PdfService
-    from services.question_service import QuestionService
+    from services.qa_extractor import QaExtractor
     from services.llm_service import LlmService
     from services.evaluation_service import EvaluationService
 
     sbert_model = SBERTSimilarity(model_name=app.config["SBERT_MODEL_NAME"])
 
+    ocr_service = OcrService(app.config)
+    extract_text_fn = ocr_service.extract
+
     assessment_service = AssessmentService(
-        extract_text_fn=extract_text,
+        extract_text_fn=extract_text_fn,
         preprocess_for_tfidf_fn=preprocess_for_tfidf,
         preprocess_for_sbert_fn=preprocess_for_sbert,
         compute_similarity_fn=compute_similarity,
         score_answer_fn=score_answer,
         sbert_model=sbert_model,
         result_store=result_store,
+        preprocess_markdown_for_sbert_fn=preprocess_markdown_for_sbert,
     )
 
-    pdf_service = PdfService(extract_text_fn=extract_text)
-    question_service = QuestionService()
+    pdf_service = PdfService(
+        extract_text_fn=extract_text_fn,
+        ocr_extract_result_fn=ocr_service.extract_result,
+    )
+    qa_extractor = QaExtractor()
     llm_service = _build_llm_service(app)
     evaluation_service = EvaluationService(
         pdf_service=pdf_service,
-        question_service=question_service,
+        qa_extractor=qa_extractor,
         llm_service=llm_service,
         assessment_service=assessment_service,
         result_store=result_store,
-        extract_text_fn=extract_text,
+        extract_text_fn=extract_text_fn,
+        extract_result_fn=ocr_service.extract_result,
     )
 
     app.config["ASSESSMENT_SERVICE"] = assessment_service
     app.config["EVALUATION_SERVICE"] = evaluation_service
     app.config["LLM_SERVICE"] = llm_service
+    app.config["OCR_SERVICE"] = ocr_service
 
     app.config["FILE_HANDLER"] = FileHandler(
         upload_folder=app.config["UPLOAD_FOLDER"],
@@ -259,7 +279,7 @@ def _register_mock_services(app: Flask, result_store: ResultStorageService) -> N
     from file_handling.file_handler import FileHandler
     from services.assessment_service import AssessmentService
     from services.pdf_service import PdfService
-    from services.question_service import QuestionService
+    from services.qa_extractor import QaExtractor
     from services.llm_service import LlmService
     from services.evaluation_service import EvaluationService
 
@@ -298,12 +318,12 @@ def _register_mock_services(app: Flask, result_store: ResultStorageService) -> N
     )
 
     pdf_service = PdfService(extract_text_fn=mock_extract)
-    question_service = QuestionService()
+    qa_extractor = QaExtractor()
     llm_service = LlmService(api_key="", model="test")
 
     evaluation_service = EvaluationService(
         pdf_service=pdf_service,
-        question_service=question_service,
+        qa_extractor=qa_extractor,
         llm_service=llm_service,
         assessment_service=assessment_service,
         result_store=result_store,

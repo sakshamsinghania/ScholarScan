@@ -1,0 +1,7 @@
+3. Securing Cloud Infrastructure:
+• Strong IAM policies
+• Data encryption (at rest and in transit)
+• Regular audits
+• Firewalls and intrusion detection systems
+• Disable public access
+• Multi-factor authentication

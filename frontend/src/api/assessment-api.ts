@@ -30,20 +30,79 @@ const MAX_FILE_SIZE = 16 * 1024 * 1024 // 16 MB
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'] as const
 
-type ApiErrorKind = 'transport' | 'timeout' | 'response'
+if (import.meta.env.PROD && !import.meta.env.VITE_API_BASE_URL) {
+  console.warn('[ScholarScan] VITE_API_BASE_URL not set in production build — falling back to /api')
+}
+
+type ApiErrorKind = 'transport' | 'timeout' | 'response' | 'rate_limited' | 'forbidden'
 
 export class ApiError extends Error {
   kind: ApiErrorKind
   status?: number
   url: string
+  code?: string
+  retryAfterSec?: number
 
-  constructor(message: string, options: { kind: ApiErrorKind; url: string; status?: number }) {
+  constructor(message: string, options: { kind: ApiErrorKind; url: string; status?: number; code?: string; retryAfterSec?: number }) {
     super(message)
     this.name = 'ApiError'
     this.kind = options.kind
     this.url = options.url
     this.status = options.status
+    this.code = options.code
+    this.retryAfterSec = options.retryAfterSec
   }
+}
+
+// -- Auth wiring (set by AuthContext) --
+
+let _getToken: () => string | null = () => null
+let _onAuthFailure: () => void = () => {}
+
+export function setAuthTokenGetter(getter: () => string | null) {
+  _getToken = getter
+}
+
+export function setOnAuthFailure(handler: () => void) {
+  _onAuthFailure = handler
+}
+
+function getAuthHeaders(): Record<string, string> {
+  const token = _getToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+// -- Refresh interceptor (single-flight) --
+
+async function refreshAndRetry<T>(
+  input: RequestInfo,
+  init: RequestInit | undefined,
+  timeoutMs: number,
+): Promise<T> {
+  const refreshFn = (window as unknown as Record<string, unknown>).__scholarscan_refresh as
+    | (() => Promise<string>)
+    | undefined
+
+  if (!refreshFn) {
+    _onAuthFailure()
+    throw new ApiError('Session expired', { kind: 'response', url: getInputUrl(input), status: 401 })
+  }
+
+  let newToken: string
+  try {
+    newToken = await refreshFn()
+  } catch {
+    _onAuthFailure()
+    throw new ApiError('Session expired', { kind: 'response', url: getInputUrl(input), status: 401 })
+  }
+
+  if (!newToken) {
+    _onAuthFailure()
+    throw new ApiError('Session expired', { kind: 'response', url: getInputUrl(input), status: 401 })
+  }
+
+  const retryHeaders = { ...(init?.headers as Record<string, string> || {}), Authorization: `Bearer ${newToken}` }
+  return requestJson<T>(input, { ...init, headers: retryHeaders }, timeoutMs, false)
 }
 
 const getErrorMessage = (data: unknown, status: number) => {
@@ -56,6 +115,13 @@ const getErrorMessage = (data: unknown, status: number) => {
   }
 
   return `Request failed (${status})`
+}
+
+const getErrorCode = (data: unknown): string | undefined => {
+  if (data && typeof data === 'object' && 'code' in data) {
+    return String((data as Record<string, unknown>).code)
+  }
+  return undefined
 }
 
 const parseJson = (text: string) => {
@@ -88,16 +154,12 @@ const toApiError = (input: RequestInfo, error: unknown) => {
   })
 }
 
-const toResponseError = (input: RequestInfo, status: number, data: unknown) => {
-  return new ApiError(getErrorMessage(data, status), {
-    kind: 'response',
-    status,
-    url: getInputUrl(input),
-  })
-}
-
 export const isApiOutageError = (error: unknown): error is ApiError => {
   return error instanceof ApiError && (error.kind === 'transport' || error.kind === 'timeout')
+}
+
+export const isRateLimitError = (error: unknown): error is ApiError => {
+  return error instanceof ApiError && error.kind === 'rate_limited'
 }
 
 export const getUserFacingErrorMessage = (error: unknown) => {
@@ -132,12 +194,17 @@ async function requestJson<T>(
   input: RequestInfo,
   init?: RequestInit,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+  allowRefreshRetry = true,
 ): Promise<T> {
+  const authHeaders = getAuthHeaders()
+  const mergedHeaders = { ...authHeaders, ...(init?.headers as Record<string, string> || {}) }
+  const mergedInit = { ...init, headers: mergedHeaders }
+
   const { signal, cleanup } = withTimeout(timeoutMs, init?.signal)
 
   let res: Response
   try {
-    res = await fetch(input, { ...init, signal })
+    res = await fetch(input, { ...mergedInit, signal })
   } catch (error) {
     cleanup()
     console.error('[assessmentApi] request failed', { input: getInputUrl(input), error })
@@ -148,9 +215,36 @@ async function requestJson<T>(
   cleanup()
   const data = parseJson(text)
 
+  if (res.status === 401 && allowRefreshRetry) {
+    return refreshAndRetry<T>(input, init, timeoutMs)
+  }
+
+  if (res.status === 403) {
+    throw new ApiError(
+      getErrorMessage(data, res.status) || "You don't have access to this resource",
+      { kind: 'forbidden', url: getInputUrl(input), status: 403, code: getErrorCode(data) },
+    )
+  }
+
+  if (res.status === 429) {
+    const retryAfter = res.headers.get('Retry-After')
+    const retryAfterSec = retryAfter ? parseInt(retryAfter, 10) : undefined
+    throw new ApiError(
+      retryAfterSec
+        ? `Too many requests. Try again in ${retryAfterSec}s`
+        : 'Too many requests. Please slow down.',
+      { kind: 'rate_limited', url: getInputUrl(input), status: 429, retryAfterSec },
+    )
+  }
+
   if (!res.ok) {
     console.error('[assessmentApi] non-ok response', { input: getInputUrl(input), status: res.status, data })
-    throw toResponseError(input, res.status, data)
+    throw new ApiError(getErrorMessage(data, res.status), {
+      kind: 'response',
+      status: res.status,
+      url: getInputUrl(input),
+      code: getErrorCode(data),
+    })
   }
 
   return data as T
@@ -207,14 +301,36 @@ export const assessmentApi = {
 
   getTaskResult: async (taskId: string, signal?: AbortSignal): Promise<Response> => {
     const url = getApiUrl(`/task/${taskId}/result`)
+    const authHeaders = getAuthHeaders()
     const timeout = withTimeout(POLL_REQUEST_TIMEOUT_MS, signal)
 
     let res: Response
     try {
-      res = await fetch(url, { signal: timeout.signal })
+      res = await fetch(url, { signal: timeout.signal, headers: authHeaders })
     } catch (error) {
       console.error('[assessmentApi] task result request failed', { url, error })
       throw toApiError(url, error)
+    }
+
+    if (res.status === 401) {
+      timeout.cleanup()
+      const refreshFn = (window as unknown as Record<string, unknown>).__scholarscan_refresh as
+        | (() => Promise<string>)
+        | undefined
+      if (refreshFn) {
+        try {
+          const newToken = await refreshFn()
+          const retryTimeout = withTimeout(POLL_REQUEST_TIMEOUT_MS, signal)
+          const retryRes = await fetch(url, { signal: retryTimeout.signal, headers: { Authorization: `Bearer ${newToken}` } })
+          retryTimeout.cleanup()
+          return retryRes
+        } catch {
+          _onAuthFailure()
+          throw new ApiError('Session expired', { kind: 'response', url, status: 401 })
+        }
+      }
+      _onAuthFailure()
+      throw new ApiError('Session expired', { kind: 'response', url, status: 401 })
     }
 
     if (res.status === 200 || res.status === 202) {
@@ -226,11 +342,19 @@ export const assessmentApi = {
     timeout.cleanup()
     const data = parseJson(text)
     console.error('[assessmentApi] unexpected task result response', { url, status: res.status, data })
-    throw toResponseError(url, res.status, data)
-  },
 
-  createProgressStream: (taskId: string): EventSource => {
-    return new EventSource(getApiUrl(`/progress/stream/${taskId}`))
+    if (res.status === 429) {
+      const retryAfter = res.headers.get('Retry-After')
+      const retryAfterSec = retryAfter ? parseInt(retryAfter, 10) : undefined
+      throw new ApiError('Too many requests', { kind: 'rate_limited', url, status: 429, retryAfterSec })
+    }
+
+    throw new ApiError(getErrorMessage(data, res.status), {
+      kind: res.status === 403 ? 'forbidden' : 'response',
+      status: res.status,
+      url,
+      code: getErrorCode(data),
+    })
   },
 
   getResults: async (filters?: {
@@ -246,7 +370,7 @@ export const assessmentApi = {
   },
 
   getHealth: async (): Promise<HealthStatus> => {
-    return requestJson<HealthStatus>(getApiUrl('/health'))
+    return requestJson<HealthStatus>(getApiUrl('/health'), undefined, DEFAULT_REQUEST_TIMEOUT_MS, false)
   },
 }
 

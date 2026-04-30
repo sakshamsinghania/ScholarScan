@@ -1,0 +1,21 @@
+• Risk of repeated attacks
+
+2. How IoT increases attack surface?
+• More connected devices
+• Weak security in IoT
+• Lack of updates
+• Poor authentication
+
+3. Preventive Policies:
+• Regular updates and patching
+• Multi-factor authentication
+• Network segmentation
+• Employee training
+• Regular backups
+• IoT security standards
+
+CASE STUDY 2: Data Breach in Cloud-Based E-Commerce
+
+1. Root Cause
+• Misconfigured cloud storage (public access)
+• Weak authentication

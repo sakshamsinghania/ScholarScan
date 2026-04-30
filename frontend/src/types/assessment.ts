@@ -3,6 +3,9 @@ export interface AssessmentResponse {
   cleaned_text: string
   tfidf_score: number
   sbert_score: number
+  sentence_similarity: number
+  concept_coverage: number
+  entailment_score: number | null
   similarity_score: number
   keyword_overlap: number
   missing_keywords: string[]
@@ -21,6 +24,9 @@ export interface QuestionResult {
   similarity_score: number
   tfidf_score: number
   sbert_score: number
+  sentence_similarity: number
+  concept_coverage: number
+  entailment_score: number | null
   keyword_overlap: number
   missing_keywords: string[]
   marks: number
@@ -29,6 +35,15 @@ export interface QuestionResult {
   feedback: string
   status: 'completed' | 'failed'
   failure_reason?: string | null
+  reference_tiers?: {
+    core: string[]
+    supporting: string[]
+    extended: string[]
+  } | null
+  core_recall?: number
+  supporting_bonus?: number
+  enrichment_suggestions?: { phrase: string; weight: number }[]
+  tier_map?: Record<string, string>
 }
 
 export interface MultiAssessmentResponse {
@@ -94,7 +109,15 @@ export interface MultiHistoryResult {
   average_score_ratio: number
 }
 
-export type HistoryResult = SingleHistoryResult | MultiHistoryResult
+export interface FailedHistoryResult {
+  id: string
+  result_type: 'failed'
+  student_id: string
+  assessed_at: string
+  error_message: string
+}
+
+export type HistoryResult = SingleHistoryResult | MultiHistoryResult | FailedHistoryResult
 
 export interface ResultsResponse {
   results: HistoryResult[]

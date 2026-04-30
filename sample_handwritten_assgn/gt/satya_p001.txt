@@ -1,0 +1,28 @@
+CC Assignment
+
+Satya Prakash
+23293916017                         Date ______
+
+1) Architecture of a Helm chart
+→ A Helm chart is a package used to define install & manage kubernetes application, its architecture consists of following main components
+• Chart.yaml - Contains metadata such as the chart name version & description.
+• Values.yaml - stores default configuration values used in templates.
+• Templates/ - Contains kubernetes resource definitions written as templates.
+• Charts/ - Includes dependent charts (subcharts)
+• Readme.md - Provides documentation about chart.
+These components together make deployment reusable & easy to manage.
+
+2) Advantages & Limitations of Serverless (FaaS)
+
+Advantages                         Limitations
+• No need to manage servers       • Cold start latency issues
+• Automatic scaling based on      • Limited execution time
+  demand                          • Vendor lock-in risk
+• Pay-as-you use cost model       • Difficult debugging &
+• Faster development & deploy-      monitoring
+  ment
+
+3) Google Big Query handles large-scale analytics efficiently using:
+→ Distributed architecture : Process data across multiple nodes.
+→ Columnar storage : Reads only required columns, improving performance.
+→ Parallel processing : Executes queries simultaneously for faster results

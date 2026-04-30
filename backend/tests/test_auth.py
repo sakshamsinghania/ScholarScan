@@ -85,6 +85,32 @@ class TestLogin:
         })
         assert resp.status_code == 401
 
+    def test_login_persists_across_app_instances_when_database_configured(self, tmp_path, monkeypatch):
+        db_path = tmp_path / "auth.sqlite"
+        database_url = f"sqlite:///{db_path}"
+
+        monkeypatch.setattr("app.Config.DATABASE_URL", database_url)
+
+        first_app = create_app(testing=True)
+        first_app.config["TESTING"] = True
+        first_app.config["AUTH_REQUIRED"] = True
+        first_client = first_app.test_client()
+
+        register_resp = first_client.post("/api/auth/register", json={
+            "email": "persist@example.com", "password": "password123",
+        })
+        assert register_resp.status_code == 201
+
+        second_app = create_app(testing=True)
+        second_app.config["TESTING"] = True
+        second_app.config["AUTH_REQUIRED"] = True
+        second_client = second_app.test_client()
+
+        login_resp = second_client.post("/api/auth/login", json={
+            "email": "persist@example.com", "password": "password123",
+        })
+        assert login_resp.status_code == 200
+
 
 class TestRefresh:
     def test_refresh_success(self, client):

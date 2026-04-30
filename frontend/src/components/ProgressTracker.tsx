@@ -2,11 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Upload, FileSearch, ScanText, Braces, Search,
   Sparkles, ArrowRightLeft, GitCompareArrows, Award,
-  CheckCircle, Loader2, XCircle, Clock,
+  CheckCircle, Loader2, XCircle, Clock, WifiOff,
 } from 'lucide-react'
-import type { ProgressEvent, AnyAssessmentResult } from '../types/assessment'
+import type { AnyAssessmentResult } from '../types/assessment'
 import { PIPELINE_STAGES } from '../types/assessment'
 import { assessmentApi } from '../api/assessment-api'
+import { streamProgress } from '../api/sse'
+import { useAuth } from '../auth/useAuth'
 
 const iconMap: Record<string, React.ElementType> = {
   Upload, FileSearch, ScanText, Braces, Search,
@@ -22,17 +24,19 @@ interface Props {
 
 type StepStatus = 'pending' | 'running' | 'completed' | 'error'
 const MAX_RESULT_POLL_ATTEMPTS = 60
+const HEARTBEAT_TIMEOUT_MS = 30_000
 
 export const ProgressTracker = ({ taskId, onComplete, onError }: Props) => {
+  const { accessToken } = useAuth()
   const [currentStage, setCurrentStage] = useState<string | null>(null)
   const [completedStages, setCompletedStages] = useState<string[]>([])
   const [message, setMessage] = useState('')
   const [status, setStatus] = useState<'running' | 'completed' | 'error'>('running')
   const [errorMessage, setErrorMessage] = useState('')
   const [elapsed, setElapsed] = useState(0)
+  const [reconnecting, setReconnecting] = useState(false)
   const startTimeRef = useRef<number>(0)
 
-  // Elapsed timer — startTime captured in ref on mount only
   useEffect(() => {
     startTimeRef.current = Date.now()
   }, [])
@@ -58,7 +62,6 @@ export const ProgressTracker = ({ taskId, onComplete, onError }: Props) => {
       if (res.status !== 202) {
         throw new Error(`Unexpected status ${res.status}`)
       }
-      // Exponential backoff: 1s, 1.5s, 2.25s … capped at 5s
       const delay = Math.min(1000 * 1.5 ** attempt, 5000)
       await new Promise((resolve) => setTimeout(resolve, delay))
     }
@@ -67,14 +70,13 @@ export const ProgressTracker = ({ taskId, onComplete, onError }: Props) => {
 
   useEffect(() => {
     const controller = new AbortController()
-    const es = assessmentApi.createProgressStream(taskId)
     let taskCompleted = false
-    let fallbackStarted = false
+    let retryCount = 0
 
     const startPollingFallback = () => {
-      if (fallbackStarted || controller.signal.aborted) return
-      fallbackStarted = true
+      if (controller.signal.aborted) return
       setMessage('Realtime updates were interrupted. Waiting for the final result…')
+      setReconnecting(false)
       fetchResult(controller.signal).catch((err) => {
         if (!controller.signal.aborted) {
           setStatus('error')
@@ -85,45 +87,90 @@ export const ProgressTracker = ({ taskId, onComplete, onError }: Props) => {
       })
     }
 
-    es.onmessage = (event) => {
+    const connectSSE = async () => {
+      if (taskCompleted || controller.signal.aborted) return
+
       try {
-        const data: ProgressEvent = JSON.parse(event.data)
+        let lastEventTime = Date.now()
+        const heartbeatCheck = setInterval(() => {
+          if (Date.now() - lastEventTime > HEARTBEAT_TIMEOUT_MS && !taskCompleted) {
+            clearInterval(heartbeatCheck)
+            if (retryCount < 1) {
+              retryCount++
+              setReconnecting(true)
+              setMessage('Lost connection, reconnecting…')
+              connectSSE()
+            } else {
+              startPollingFallback()
+            }
+          }
+        }, 5000)
 
-        setCurrentStage(data.stage)
-        setCompletedStages(data.completed_stages)
-        setMessage(data.message)
+        for await (const data of streamProgress(taskId, accessToken, controller.signal)) {
+          lastEventTime = Date.now()
+          setReconnecting(false)
 
-        if (data.stage === 'completed') {
-          taskCompleted = true
-          es.close()
+          setCurrentStage(data.stage)
+          setCompletedStages(data.completed_stages)
+          setMessage(data.message)
+
+          if (data.stage === 'completed') {
+            taskCompleted = true
+            clearInterval(heartbeatCheck)
+            startPollingFallback()
+            return
+          }
+
+          if (data.status === 'error') {
+            taskCompleted = true
+            clearInterval(heartbeatCheck)
+            setStatus('error')
+            setErrorMessage(data.message)
+            onError(data.message)
+            return
+          }
+        }
+
+        clearInterval(heartbeatCheck)
+        if (!taskCompleted) {
           startPollingFallback()
         }
+      } catch (err) {
+        if (controller.signal.aborted) return
 
-        if (data.status === 'error') {
-          taskCompleted = true
+        if (err instanceof Error && err.message === 'AUTH_EXPIRED') {
+          if (typeof (window as unknown as Record<string, unknown>).__scholarscan_refresh === 'function') {
+            try {
+              await ((window as unknown as Record<string, unknown>).__scholarscan_refresh as () => Promise<string>)()
+              connectSSE()
+              return
+            } catch {
+              // refresh failed — fall through
+            }
+          }
           setStatus('error')
-          setErrorMessage(data.message)
-          es.close()
-          onError(data.message)
+          setErrorMessage('Session expired')
+          onError('Session expired')
+          return
         }
-      } catch {
-        // ignore parse errors from non-JSON keepalive frames
+
+        if (retryCount < 1 && !taskCompleted) {
+          retryCount++
+          setReconnecting(true)
+          setMessage('Lost connection, reconnecting…')
+          setTimeout(connectSSE, 2000)
+        } else if (!taskCompleted) {
+          startPollingFallback()
+        }
       }
     }
 
-    es.onerror = () => {
-      es.close()
-      // Only poll for result if the task wasn't already handled
-      if (!taskCompleted) {
-        startPollingFallback()
-      }
-    }
+    connectSSE()
 
     return () => {
       controller.abort()
-      es.close()
     }
-  }, [taskId, fetchResult, onError])
+  }, [taskId, accessToken, fetchResult, onError])
 
   const getStepStatus = (stageKey: string): StepStatus => {
     if (completedStages.includes(stageKey)) return 'completed'
@@ -161,6 +208,14 @@ export const ProgressTracker = ({ taskId, onComplete, onError }: Props) => {
           {formatTime(elapsed)}
         </div>
       </div>
+
+      {/* Reconnecting banner */}
+      {reconnecting && (
+        <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg text-xs animate-fade-in" style={{ background: 'rgba(224, 168, 75, 0.1)', border: '1px solid rgba(224, 168, 75, 0.2)', color: 'var(--color-warning)' }}>
+          <WifiOff size={14} />
+          Lost connection, reconnecting…
+        </div>
+      )}
 
       {/* Vertical stepper */}
       <div className="relative ml-0.5">

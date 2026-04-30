@@ -1,0 +1,21 @@
+→ Serverless model - No need to manage infrastructure
+→ Dremel execution engine - Enables high speed query processing.
+
+(4) Comparison :-
+
+Feature         Prebuilt ML APIs     AutoML      Custom ML Models
+Expertise Req   Low                  Medium      High
+Flexibility     Low                  Medium      High
+Development time Fast                Moderate    Slow
+Control         Limited              Partial     Full
+
+* Prebuilt ML APIs : Ready to use solutions for tasks like vision or speech
+* AutoML : Allows model creation with minimal coding effort
+* Custom ML Models : Fully customizable but requires deep expertise.
+
+(5) The lifecycle of serverless function includes
+(i) Trigger - An event occurs (HTTP req, file upload)
+(ii) Execution - The function runs in response to the trigger
+(iii) Scaling - Automatically scales up or down based on demand
+(iv) Termination - Stops execution after completing the task.
+This ensures efficient resource utilization.

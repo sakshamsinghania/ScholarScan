@@ -14,7 +14,7 @@ from functools import lru_cache
 from rapidfuzz import fuzz, process
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
-__all__ = ["preprocess_for_tfidf", "preprocess_for_sbert"]
+__all__ = ["preprocess_for_tfidf", "preprocess_for_sbert", "preprocess_markdown_for_sbert", "split_sentences"]
 
 logger = logging.getLogger(__name__)
 
@@ -383,6 +383,89 @@ def preprocess_for_tfidf(text: str, debug: bool = False) -> str:
         logger.debug("TF-IDF ready: %s...", result[:120])
 
     return result
+
+
+# --------------------------------------------------------------------------- #
+#  Markdown-aware SBERT preprocessing (for Mistral OCR output)                 #
+# --------------------------------------------------------------------------- #
+
+_MD_HEADING_RE = re.compile(r"^#{1,6}\s+")
+_MD_BOLD_RE = re.compile(r"\*\*(.+?)\*\*")
+_MD_ITALIC_RE = re.compile(r"\*(.+?)\*")
+_MD_LEADING_BULLET_RE = re.compile(r"^\s*[-*+]\s+")
+_MD_TABLE_SEPARATOR_RE = re.compile(r"^\s*\|?\s*-{2,}[\s|:-]*$")
+_LATEX_DISPLAY_RE = re.compile(r"\$\$(.+?)\$\$", re.DOTALL)
+_LATEX_INLINE_RE = re.compile(r"\$(.+?)\$")
+_HTML_ENTITY_RE = re.compile(r"&(gt|lt|amp|quot|apos);")
+
+_HTML_ENTITY_MAP = {
+    "gt": ">", "lt": "<", "amp": "&", "quot": '"', "apos": "'",
+}
+
+
+def preprocess_markdown_for_sbert(text: str) -> str:
+    """Markdown-aware preprocessing that preserves case, math, and structure.
+
+    Unlike preprocess_for_sbert, this does NOT lowercase, strip special chars,
+    or run fuzzy domain correction — Mistral output is clean enough that those
+    steps are net negative for SBERT.
+    """
+    lines: list[str] = []
+    for line in text.split("\n"):
+        stripped = line.strip()
+
+        if _MD_TABLE_SEPARATOR_RE.match(stripped):
+            continue
+
+        stripped = _MD_HEADING_RE.sub("", stripped)
+        stripped = _MD_BOLD_RE.sub(r"\1", stripped)
+        stripped = _MD_ITALIC_RE.sub(r"\1", stripped)
+        stripped = _MD_LEADING_BULLET_RE.sub("", stripped)
+
+        stripped = _LATEX_DISPLAY_RE.sub(r" \1 ", stripped)
+        stripped = _LATEX_INLINE_RE.sub(r" \1 ", stripped)
+
+        def _entity_replace(m: re.Match) -> str:
+            return _HTML_ENTITY_MAP.get(m.group(1), m.group(0))
+
+        stripped = _HTML_ENTITY_RE.sub(_entity_replace, stripped)
+
+        stripped = re.sub(r"\s+", " ", stripped).strip()
+        if stripped:
+            lines.append(stripped)
+
+    return " ".join(lines)
+
+
+# --------------------------------------------------------------------------- #
+#  Sentence splitting                                                          #
+# --------------------------------------------------------------------------- #
+
+_SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
+_MIN_SENTENCE_TOKENS = 3
+
+
+def split_sentences(text: str) -> list[str]:
+    """Split text into sentences, preferring spaCy sents with regex fallback.
+
+    Drops sentences with fewer than _MIN_SENTENCE_TOKENS tokens to filter
+    OCR noise fragments.
+    """
+    if not text or not text.strip():
+        return []
+
+    sentences: list[str] = []
+    try:
+        nlp = _get_spacy_nlp()
+        doc = nlp(text)
+        sentences = [sent.text.strip() for sent in doc.sents]
+    except Exception:
+        sentences = _SENTENCE_SPLIT_RE.split(text.strip())
+
+    return [
+        s for s in sentences
+        if s.strip() and len(s.split()) >= _MIN_SENTENCE_TOKENS
+    ]
 
 
 # --------------------------------------------------------------------------- #

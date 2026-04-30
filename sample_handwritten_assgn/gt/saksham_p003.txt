@@ -1,0 +1,27 @@
+Q4. Compare
+
+                Pre-built APIs        AutoML        Custom Models
+Skill needed    None                  Low           High
+Data needed     None                  Hundreds-thousands   Millions
+Customization   None                  Moderate      Full
+Time to deploy  Minutes               Hours-days    Weeks-months
+Best for        Generic tasks         Domain specific   Novel/research
+Example         Vision API, Translate AutoML tables     Tensorflow/PyTorch
+
+Q5. Explain the complete lifecycle of a serverless
+function, including trigger, execution and scaling.
+
+1. Deploy - upload code, set runtime, memory,
+   timeout.
+2. Register trigger - HTTP, queue event, storage
+   event, cron
+3. Trigger fires - invocation event received by platform
+4. Cold/warm start - new container initialized (cold)
+   or existing reused (warm)
+5. Execute - handler runs with event payload,
+   accesses external services.
+6. Return response - result sent back to caller
+7. Auto scaler - concurrent events spawn parallel
+   instances automatically
+8. Idle/teardown - container frozen or GC’d
+   after inactivity, billing stops.

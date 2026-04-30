@@ -1,0 +1,23 @@
+• Rebuild trust
+
+3. Cloud Security Challenges
+
+Shared Responsibility Model:
+• Provider handles infrastructure
+• Company handles data and access
+
+• Data encryption issues
+• Identity and access mismanagement
+
+Questions
+
+1. Who is responsible?
+Both, but mainly the company:
+• Provider handles infrastructure security
+• Company handles data protection and configuration
+
+2. Legal Implications:
+• Violation of data protection laws
+• Fines and penalties
+• Customer lawsuits
+• Reputation damage

@@ -1,0 +1,33 @@
+Name - Minaz Hussain      Roll no. - 23293916011
+B
+
+Cloud Computing Assignment - 2          Date .............
+
+Ques.1: Explain the architecture of the helm chart, including its main components?
+
+=> A helm chart is a packaged used in kubernetes to define, install and manage applications.
+
+Main components
+
+1) Chart.yaml
+• Contains metadata (name, version, description)
+• Defines dependencies
+
+2) Values.yaml
+• Default configuration values
+• Can be overridden during deployment
+
+3) templates/
+• Contains kubernetes manifest templates (YAML files)
+• Uses go templating for dynamic values
+
+4) charts/
+• Stores dependent charts
+
+5) .helmignore
+• Specifies files to exclude from packaging
+
+6) Notes.txt
+• Provides post-install instructions to users
+
+Ques.2: Discuss the advantages and limitations of serverless (FaaS)?
