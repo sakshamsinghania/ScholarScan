@@ -144,9 +144,9 @@ def create_app(testing: bool = False) -> Flask:
     CORS(app, resources={r"/api/*": {"origins": _get_cors_origins()}})
     _configure_runtime_capabilities(app, testing)
 
-    # Phase 2: initialise DB when DATABASE_URL is configured
-    if app.config.get("DATABASE_URL"):
-        db_ok = init_db(app.config["DATABASE_URL"])
+    # Initialise MongoDB when MONGODB_URI is configured
+    if app.config.get("MONGODB_URI"):
+        db_ok = init_db(app.config["MONGODB_URI"], app.config.get("MONGODB_NAME", "scholarscan"))
         if db_ok:
             create_all_tables()
         else:

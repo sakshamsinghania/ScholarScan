@@ -146,43 +146,46 @@ def _get_redis_client():
 
 
 def _persist_progress_event(task_id: str, stage: str, owner_id: str | None, payload: dict | None) -> None:
-    """Write a ProgressEvent row to DB for SSE replay. No-op if DB unavailable."""
+    """Write a progress_events document to DB for SSE replay. No-op if DB unavailable."""
     try:
+        from datetime import datetime, timezone
         from db.session import get_session, is_db_available
-        from db.models import ProgressEvent
         if not is_db_available():
             return
-        with get_session() as session:
-            if session is None:
+        with get_session() as db:
+            if db is None:
                 return
-            event = ProgressEvent(
-                task_id=task_id,
-                owner_id=owner_id,
-                stage=stage,
-                payload=payload,
-            )
-            session.add(event)
+            db["progress_events"].insert_one({
+                "task_id": task_id,
+                "owner_id": owner_id,
+                "stage": stage,
+                "payload": payload,
+                "created_at": datetime.now(timezone.utc),
+            })
     except Exception as exc:
         logger.debug("Failed to persist progress event: %s", exc)
 
 
 def _mark_assessment_failed(task_id: str, error_message: str, owner_id: str | None) -> None:
-    """Update or create an assessments row with status=failed. No-op if DB unavailable."""
+    """Upsert an assessments document with status=failed. No-op if DB unavailable."""
     try:
         from datetime import datetime, timezone
         from db.session import get_session, is_db_available
-        from db.models import Assessment
         if not is_db_available():
             return
-        with get_session() as session:
-            if session is None:
+        with get_session() as db:
+            if db is None:
                 return
-            row = session.get(Assessment, task_id)
-            if row is None:
-                row = Assessment(id=task_id, owner_id=owner_id)
-                session.add(row)
-            row.status = "failed"
-            row.error_message = error_message
-            row.completed_at = datetime.now(timezone.utc)
+            now = datetime.now(timezone.utc)
+            db["assessments"].update_one(
+                {"_id": task_id},
+                {"$set": {
+                    "status": "failed",
+                    "error_message": error_message,
+                    "completed_at": now,
+                    "owner_id": owner_id,
+                }, "$setOnInsert": {"created_at": now}},
+                upsert=True,
+            )
     except Exception as exc:
         logger.debug("Failed to mark assessment failed in DB: %s", exc)
