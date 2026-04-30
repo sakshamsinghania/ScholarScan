@@ -1,88 +1,69 @@
-"""SQLAlchemy engine + session factory.
+"""MongoDB client + database accessor.
 
-Activated when DATABASE_URL is set. When unset, get_session() returns None
+Activated when MONGODB_URI is set. When unset, get_session() yields None
 and callers fall back to in-memory storage.
 """
 
 from __future__ import annotations
 
 import logging
-import os
 from contextlib import contextmanager
 from typing import Generator
 
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+from pymongo import MongoClient, ASCENDING, DESCENDING
+from pymongo.database import Database
 
 logger = logging.getLogger(__name__)
 
-_engine = None
-_SessionFactory: sessionmaker | None = None
+_client: MongoClient | None = None
+_database: Database | None = None
 
 
-class Base(DeclarativeBase):
-    pass
-
-
-def init_db(database_url: str) -> bool:
-    """Initialise engine + session factory. Returns True on success."""
-    global _engine, _SessionFactory
-    if not database_url:
+def init_db(uri: str, db_name: str) -> bool:
+    """Connect to MongoDB. Returns True on success."""
+    global _client, _database
+    if not uri:
         return False
     try:
-        _engine = create_engine(
-            database_url,
-            pool_pre_ping=True,
-            pool_size=5,
-            max_overflow=10,
-        )
-        _SessionFactory = sessionmaker(bind=_engine, expire_on_commit=False)
-        # Smoke-test the connection
-        with _engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
-        logger.info("Database connected: %s", database_url.split("@")[-1])
+        _client = MongoClient(uri, serverSelectionTimeoutMS=5000)
+        _database = _client[db_name]
+        _client.admin.command("ping")
+        logger.info("MongoDB connected: %s / %s", uri.split("@")[-1], db_name)
         return True
     except Exception as exc:
-        logger.warning("Database unavailable (%s) — falling back to in-memory storage", exc)
-        _engine = None
-        _SessionFactory = None
+        logger.warning("MongoDB unavailable (%s) — falling back to in-memory storage", exc)
+        _client = None
+        _database = None
         return False
 
 
 def reset_db() -> None:
-    """Dispose the active engine/session factory."""
-    global _engine, _SessionFactory
-    if _engine is not None:
-        _engine.dispose()
-    _engine = None
-    _SessionFactory = None
+    """Close the active client."""
+    global _client, _database
+    if _client is not None:
+        _client.close()
+    _client = None
+    _database = None
 
 
 def is_db_available() -> bool:
-    return _SessionFactory is not None
+    return _database is not None
 
 
 @contextmanager
-def get_session() -> Generator[Session | None, None, None]:
-    """Context manager that yields a DB session or None (RAM fallback)."""
-    if _SessionFactory is None:
-        yield None
-        return
-
-    session: Session = _SessionFactory()
-    try:
-        yield session
-        session.commit()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+def get_session() -> Generator[Database | None, None, None]:
+    """Context manager that yields the MongoDB database or None (RAM fallback)."""
+    yield _database
 
 
 def create_all_tables() -> None:
-    """Create all ORM-mapped tables (idempotent — use alembic for prod migrations)."""
-    if _engine is None:
+    """Create MongoDB indexes (idempotent)."""
+    if _database is None:
         return
-    from db.models import Base as ModelBase  # noqa: F401 — registers models
-    ModelBase.metadata.create_all(_engine)
+    _database["assessments"].create_index("owner_id")
+    _database["assessments"].create_index("student_id")
+    _database["assessments"].create_index([("created_at", DESCENDING)])
+    _database["users"].create_index("email", unique=True)
+    _database["llm_cache"].create_index([("last_hit_at", ASCENDING)])
+    _database["progress_events"].create_index("task_id")
+    logger.info("MongoDB indexes created")

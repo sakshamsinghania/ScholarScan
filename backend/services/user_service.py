@@ -1,18 +1,17 @@
-"""In-memory user store with bcrypt password hashing."""
+"""User CRUD backed by MongoDB users collection."""
 
 import threading
 import uuid
+from datetime import datetime, timezone
 
 import bcrypt as _bcrypt
-from sqlalchemy import select
 
-from db.models import UserAccount
 from db.session import get_session, is_db_available
 from models.user import User
 
 
 class UserService:
-    """Thread-safe in-memory user storage. Will be replaced by Postgres in Phase 2."""
+    """Thread-safe user storage. DB-backed when MongoDB is available, RAM fallback otherwise."""
 
     def __init__(self):
         self._users_by_id: dict[str, User] = {}
@@ -25,31 +24,25 @@ class UserService:
         hashed = _bcrypt.hashpw(password.encode(), _bcrypt.gensalt()).decode()
 
         if is_db_available():
-            with get_session() as session:
-                if session is None:
+            with get_session() as db:
+                if db is None:
                     raise RuntimeError("Database session unavailable")
-
-                existing = session.execute(
-                    select(UserAccount).where(UserAccount.email == normalized_email)
-                ).scalar_one_or_none()
-                if existing is not None:
+                if db["users"].find_one({"email": normalized_email}):
                     raise ValueError("Email already registered")
-
-                record = UserAccount(
-                    id=str(uuid.uuid4()),
-                    email=normalized_email,
-                    hashed_password=hashed,
-                    role=role,
-                )
-                session.add(record)
-                session.flush()
-                session.refresh(record)
-                return self._to_user(record)
+                user_id = str(uuid.uuid4())
+                doc = {
+                    "_id": user_id,
+                    "email": normalized_email,
+                    "hashed_password": hashed,
+                    "role": role,
+                    "created_at": datetime.now(timezone.utc),
+                }
+                db["users"].insert_one(doc)
+                return self._to_user(doc)
 
         with self._lock:
             if normalized_email in self._users_by_email:
                 raise ValueError("Email already registered")
-
             user = User(
                 id=str(uuid.uuid4()),
                 email=normalized_email,
@@ -65,30 +58,27 @@ class UserService:
         normalized_email = email.strip().lower()
 
         if is_db_available():
-            with get_session() as session:
-                if session is None:
+            with get_session() as db:
+                if db is None:
                     return None
-                user = session.execute(
-                    select(UserAccount).where(UserAccount.email == normalized_email)
-                ).scalar_one_or_none()
-                if user and _bcrypt.checkpw(password.encode(), user.hashed_password.encode()):
-                    return self._to_user(user)
+                doc = db["users"].find_one({"email": normalized_email})
+                if doc and _bcrypt.checkpw(password.encode(), doc["hashed_password"].encode()):
+                    return self._to_user(doc)
                 return None
 
         with self._lock:
             user = self._users_by_email.get(normalized_email)
-
         if user and _bcrypt.checkpw(password.encode(), user.hashed_password.encode()):
             return user
         return None
 
     def get_by_id(self, user_id: str) -> User | None:
         if is_db_available():
-            with get_session() as session:
-                if session is None:
+            with get_session() as db:
+                if db is None:
                     return None
-                user = session.get(UserAccount, user_id)
-                return self._to_user(user) if user is not None else None
+                doc = db["users"].find_one({"_id": user_id})
+                return self._to_user(doc) if doc else None
 
         with self._lock:
             return self._users_by_id.get(user_id)
@@ -97,23 +87,21 @@ class UserService:
         normalized_email = email.strip().lower()
 
         if is_db_available():
-            with get_session() as session:
-                if session is None:
+            with get_session() as db:
+                if db is None:
                     return None
-                user = session.execute(
-                    select(UserAccount).where(UserAccount.email == normalized_email)
-                ).scalar_one_or_none()
-                return self._to_user(user) if user is not None else None
+                doc = db["users"].find_one({"email": normalized_email})
+                return self._to_user(doc) if doc else None
 
         with self._lock:
             return self._users_by_email.get(normalized_email)
 
     @staticmethod
-    def _to_user(record: UserAccount) -> User:
+    def _to_user(doc: dict) -> User:
         return User(
-            id=record.id,
-            email=record.email,
-            hashed_password=record.hashed_password,
-            role=record.role,
-            created_at=record.created_at,
+            id=doc["_id"],
+            email=doc["email"],
+            hashed_password=doc["hashed_password"],
+            role=doc.get("role", "teacher"),
+            created_at=doc.get("created_at"),
         )

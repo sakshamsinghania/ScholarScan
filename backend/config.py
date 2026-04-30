@@ -49,10 +49,11 @@ class Config:
     RATE_LIMIT_LOGIN = os.getenv("RATE_LIMIT_LOGIN", "10/minute")
     RATE_LIMIT_GLOBAL = os.getenv("RATE_LIMIT_GLOBAL", "300/hour")
 
-    # --- Persistence (Phase 2) ---
-    # Set DATABASE_URL to enable Postgres-backed storage (Postgres or SQLite).
+    # --- Persistence ---
+    # Set MONGODB_URI to enable MongoDB-backed storage.
     # Unset → RAM-only fallback (safe for local dev and tests).
-    DATABASE_URL = os.getenv("DATABASE_URL", "")
+    MONGODB_URI = os.getenv("MONGODB_URI", "")
+    MONGODB_NAME = os.getenv("MONGODB_NAME", "scholarscan")
 
     # --- Job queue (Phase 3) ---
     # Set USE_CELERY=true to route async jobs through Celery/Redis.
